@@ -8,31 +8,42 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ImagePage(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/resimler/parrot.png',
+              width: 180,
+              height: 180,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ImagePage(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                minimumSize: const Size(220, 100),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                elevation: 8,
               ),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            minimumSize: const Size(220, 100),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
+              child: const Text(
+                'Başla!',
+                style: TextStyle(
+                  fontSize: 38,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
-            elevation: 8,
-          ),
-          child: const Text(
-            'Başla!',
-            style: TextStyle(
-              fontSize: 38,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
+          ],
         ),
       ),
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'finish_page.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-
+import 'yildizliekran.dart';
 class ImagePage extends StatefulWidget {
   const ImagePage({super.key});
 
@@ -61,14 +61,28 @@ class _ImagePageState extends State<ImagePage> {
   void checkAnswer(String spoken) {
     if (spoken.toLowerCase().contains(answers[currentIndex])) {
       results.add(attemptCount + 1);
-      nextImage();
+      showYildizliEkran(attemptCount +1);
     } else {
       attemptCount++;
       if (attemptCount >= 3) {
         results.add(-1);
-        nextImage();
+        showYildizliEkran(-1);
       }
     }
+  }
+  void showYildizliEkran(int result) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StarPage(
+          result: result,
+          onNext: () {
+            Navigator.pop(context); // star page'i kapat
+            nextImage(); // sonraki resme geç
+          },
+        ),
+      ),
+    );
   }
   //kaç doğru var
   void nextImage() {
@@ -159,24 +173,6 @@ class _ImagePageState extends State<ImagePage> {
                   isListening ? Icons.mic : Icons.mic_none,
                   color: Colors.white,
                   size: 50,
-                ),
-              ),
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: nextImage,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                minimumSize: const Size(180, 65),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
-              child: Text(
-                currentIndex == imagePaths.length - 1 ? 'Bitir' : 'Sonraki Resim',
-                style: const TextStyle(
-                  fontSize: 24,
-                  color: Colors.white,
                 ),
               ),
             ),
