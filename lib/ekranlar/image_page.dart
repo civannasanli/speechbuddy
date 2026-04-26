@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'finish_page.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 class ImagePage extends StatefulWidget {
   const ImagePage({super.key});
@@ -7,39 +8,86 @@ class ImagePage extends StatefulWidget {
   @override
   State<ImagePage> createState() => _ImagePageState();
 }
-
+//fotoğraflar ve istenen sonuçlar
 class _ImagePageState extends State<ImagePage> {
   int currentIndex = 0;
   bool isListening = false;
-
+  final SpeechToText _speech = SpeechToText();
+  bool _speechEnabled = false;
+  int attemptCount = 0;
+  List<int> results = [];
+  final List<String> answers = ['ayakkabı', 'bardak', 'limon'];
   final List<String> imagePaths = [
     'assets/resimler/ayakkabi.png',
     'assets/resimler/bardak.png',
     'assets/resimler/limon.png',
   ];
-
-  void toggleListening() {
-    setState(() {
-      isListening = !isListening;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
   }
 
+  Future<void> _initSpeech() async {
+    _speechEnabled = await _speech.initialize(
+      onError: (error) => print('Hata: $error'),
+      onStatus: (status) => print('Durum: $status'),
+    );
+    setState(() {});
+  }
+//mikrofon ve text to speech
+  void toggleListening() async {
+    if (!_speechEnabled) return;
+
+    if (isListening) {
+      await _speech.stop();
+      setState(() => isListening = false);
+    } else {
+      setState(() => isListening = true);
+      _speech.listen(
+        localeId: 'tr_TR',
+        onResult: (result) {
+          if (result.finalResult) {
+            String spoken = result.recognizedWords;
+            print('Çocuk dedi: $spoken'); // test için
+            checkAnswer(spoken);
+            setState(() => isListening = false);
+          }
+        },
+      );
+    }
+  }
+  //text to speech fonksiyonuyla kontrol
+  void checkAnswer(String spoken) {
+    if (spoken.toLowerCase().contains(answers[currentIndex])) {
+      results.add(attemptCount + 1);
+      nextImage();
+    } else {
+      attemptCount++;
+      if (attemptCount >= 3) {
+        results.add(-1);
+        nextImage();
+      }
+    }
+  }
+  //kaç doğru var
   void nextImage() {
     if (currentIndex < imagePaths.length - 1) {
       setState(() {
         currentIndex++;
         isListening = false;
+        attemptCount = 0;
       });
     } else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const FinishPage(),
+          builder: (context) => FinishPage(results: results,),//son sayfaya yollama
         ),
       );
     }
   }
-
+//görüntü ve güzellikler
   @override
   Widget build(BuildContext context) {
     return Scaffold(

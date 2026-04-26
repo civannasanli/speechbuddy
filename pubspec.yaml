@@ -10,6 +10,7 @@ environment:
   sdk: ^3.11.5
 
 dependencies:
+  speech_to_text: 7.3.0
 
   flutter:
     sdk: flutter
