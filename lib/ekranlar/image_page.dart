@@ -3,7 +3,8 @@ import 'finish_page.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'yildizliekran.dart';
 class ImagePage extends StatefulWidget {
-  const ImagePage({super.key});
+  final String category;
+  const ImagePage({super.key, required this.category});
 
   @override
   State<ImagePage> createState() => _ImagePageState();
@@ -16,16 +17,123 @@ class _ImagePageState extends State<ImagePage> {
   bool _speechEnabled = false;
   int attemptCount = 0;
   List<int> results = [];
-  final List<String> answers = ['ayakkabı', 'bardak', 'limon'];
-  final List<String> imagePaths = [
-    'assets/resimler/ayakkabi.png',
-    'assets/resimler/bardak.png',
-    'assets/resimler/limon.png',
-  ];
+  List<String> answers = [];
+  List<String> imagePaths = [ ];
   @override
   void initState() {
     super.initState();
     _initSpeech();
+    _loadCategory();
+  }
+  void _loadCategory() {
+    switch (widget.category) {
+      case '3-4':
+        imagePaths = ['assets/3-4/anahtar.png',
+            'assets/3-4/ayakkabı.png',
+            'assets/3-4/bardak.png',
+            'assets/3-4/bayrak.png',
+            'assets/3-4/bebek.png',
+            'assets/3-4/dede.png',
+            'assets/3-4/dis.png',
+            'assets/3-4/dondurma.png',
+            'assets/3-4/elma.png',
+            'assets/3-4/gaga.png',
+            'assets/3-4/güneş.png',
+            'assets/3-4/havuç.png',
+            'assets/3-4/kedi.png',
+            'assets/3-4/kulak.png',
+            'assets/3-4/limon.png',
+            'assets/3-4/masa.png',
+            'assets/3-4/nar.png',
+            'assets/3-4/nine.png',
+            'assets/3-4/peynir.png',
+            'assets/3-4/toka.ğng',
+            'assets/3-4/top.png',
+            'assets/3-4/yatak.png',
+            'assets/3-4/yılan.png'];
+        answers = ['anahtar',
+            'ayakkabı',
+            'bardak',
+            'bayrak',
+            'bebek',
+            'dede',
+            'diş',
+            'dondurma',
+            'elma',
+            'gaga',
+            'güneş',
+            'havuç',
+            'kedi',
+            'kulak',
+            'limon',
+            'masa',
+            'nar',
+            'nine',
+            'peynir',
+            'toka',
+            'top',
+            'yatak',
+            'yılan',
+        ];
+        break;
+      case '4-5':
+        imagePaths = ['assets/4-5/bisiklet.png',
+            'assets/4-5/cep.png',
+            'assets/4-5/cicek.png',
+            'assets/4-5/cocuk.png',
+            'assets/4-5/defter.png',
+            'assets/4-5/fare.png',
+            'assets/4-5/fırca.png',
+            'assets/4-5/jilet.png',
+            'assets/4-5/kasik.png',
+            'assets/4-5/oje.png',
+            'assets/4-5/ruj.png',
+            'assets/4-5/sabun.png',
+            'assets/4-5/salıncak.png',
+            'assets/4-5/sapka.png',
+            'assets/4-5/tavsan.png',
+            'assets/4-5/telefon.png',
+            'assets/4-5/uzum.png',
+            'assets/4-5/vazo.png',
+            'assets/4-5/zil.png'];
+        answers = ['bisiklet',
+            'cep',
+            'çiçek',
+            'çocuk',
+            'defter',
+            'fare',
+            'fırça',
+            'jilet',
+            'kaşık',
+            'oje',
+            'ruj',
+            'sabun',
+            'salıncak',
+            'şapka',
+            'tavşan',
+            'telefon',
+            'üzüm',
+            'vazo',
+            'zil'];
+        break;
+      case '5-6':
+        imagePaths = ['assets/5-6/agac.png',
+            'assets/5-6/araba.png',
+            'assets/5-6/ari.png',
+            'assets/5-6/dügme.png',
+            'assets/5-6/park.png',
+            'assets/5-6/resim.png',
+            'assets/5-6/tarak.png'];
+        answers = ['ağaç',
+            'araba',
+            'arı',
+            'düğme',
+            'park',
+            'resim',
+            'tarak'
+            ];
+        break;
+    }
   }
 
   Future<void> _initSpeech() async {

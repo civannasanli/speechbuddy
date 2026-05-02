@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'image_page.dart';
+import 'category_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -22,7 +22,7 @@ class HomePage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ImagePage(),
+                    builder: (context) => const CategoryPage(),
                   ),
                 );
               },
