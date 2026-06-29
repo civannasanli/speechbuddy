@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'image_page.dart';
+import 'bolumEkrani.dart'; // ImagePage import'u kaldır, bunu ekle
 
 class CategoryPage extends StatelessWidget {
   const CategoryPage({super.key});
@@ -34,7 +34,7 @@ class CategoryPage extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ImagePage(category: category),
+            builder: (context) => SectionPage(category: category), // değişti
           ),
         );
       },

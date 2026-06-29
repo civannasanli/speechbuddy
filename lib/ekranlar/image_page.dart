@@ -2,146 +2,127 @@ import 'package:flutter/material.dart';
 import 'finish_page.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'yildizliekran.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'fotolarCevaplar.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:audioplayers/audioplayers.dart';
 class ImagePage extends StatefulWidget {
   final String category;
-  const ImagePage({super.key, required this.category});
+  final int section;
+  const ImagePage({super.key, required this.category,required this.section});
 
   @override
   State<ImagePage> createState() => _ImagePageState();
 }
 //fotoğraflar ve istenen sonuçlar
-class _ImagePageState extends State<ImagePage> {
+class _ImagePageState extends State<ImagePage> with TickerProviderStateMixin {
   int currentIndex = 0;
   bool isListening = false;
+  bool showRetry = false;
   final SpeechToText _speech = SpeechToText();
+  final FlutterTts _tts = FlutterTts();
   bool _speechEnabled = false;
   int attemptCount = 0;
   List<int> results = [];
   List<String> answers = [];
-  List<String> imagePaths = [ ];
+  List<String> imagePaths = [];
+  List<String> wrongAnswers=[];
+  List<String> completelyWrong = [];
+  Map<String, int> wordResults = {};
+  final AudioPlayer _audioPlayer = AudioPlayer();
   @override
   void initState() {
     super.initState();
+    _loadCategory(); // önce category yükle
     _initSpeech();
-    _loadCategory();
+    _initTts().then((_) async {
+      await _loadProgress(); // progress yükle
+      _speakWord(); // sonra konuş
+    });
   }
   void _loadCategory() {
-    switch (widget.category) {
-      case '3-4':
-        imagePaths = ['assets/3-4/anahtar.png',
-            'assets/3-4/ayakkabı.png',
-            'assets/3-4/bardak.png',
-            'assets/3-4/bayrak.png',
-            'assets/3-4/bebek.png',
-            'assets/3-4/dede.png',
-            'assets/3-4/dis.png',
-            'assets/3-4/dondurma.png',
-            'assets/3-4/elma.png',
-            'assets/3-4/gaga.png',
-            'assets/3-4/güneş.png',
-            'assets/3-4/havuç.png',
-            'assets/3-4/kedi.png',
-            'assets/3-4/kulak.png',
-            'assets/3-4/limon.png',
-            'assets/3-4/masa.png',
-            'assets/3-4/nar.png',
-            'assets/3-4/nine.png',
-            'assets/3-4/peynir.png',
-            'assets/3-4/toka.ğng',
-            'assets/3-4/top.png',
-            'assets/3-4/yatak.png',
-            'assets/3-4/yılan.png'];
-        answers = ['anahtar',
-            'ayakkabı',
-            'bardak',
-            'bayrak',
-            'bebek',
-            'dede',
-            'diş',
-            'dondurma',
-            'elma',
-            'gaga',
-            'güneş',
-            'havuç',
-            'kedi',
-            'kulak',
-            'limon',
-            'masa',
-            'nar',
-            'nine',
-            'peynir',
-            'toka',
-            'top',
-            'yatak',
-            'yılan',
-        ];
-        break;
-      case '4-5':
-        imagePaths = ['assets/4-5/bisiklet.png',
-            'assets/4-5/cep.png',
-            'assets/4-5/cicek.png',
-            'assets/4-5/cocuk.png',
-            'assets/4-5/defter.png',
-            'assets/4-5/fare.png',
-            'assets/4-5/fırca.png',
-            'assets/4-5/jilet.png',
-            'assets/4-5/kasik.png',
-            'assets/4-5/oje.png',
-            'assets/4-5/ruj.png',
-            'assets/4-5/sabun.png',
-            'assets/4-5/salıncak.png',
-            'assets/4-5/sapka.png',
-            'assets/4-5/tavsan.png',
-            'assets/4-5/telefon.png',
-            'assets/4-5/uzum.png',
-            'assets/4-5/vazo.png',
-            'assets/4-5/zil.png'];
-        answers = ['bisiklet',
-            'cep',
-            'çiçek',
-            'çocuk',
-            'defter',
-            'fare',
-            'fırça',
-            'jilet',
-            'kaşık',
-            'oje',
-            'ruj',
-            'sabun',
-            'salıncak',
-            'şapka',
-            'tavşan',
-            'telefon',
-            'üzüm',
-            'vazo',
-            'zil'];
-        break;
-      case '5-6':
-        imagePaths = ['assets/5-6/agac.png',
-            'assets/5-6/araba.png',
-            'assets/5-6/ari.png',
-            'assets/5-6/dügme.png',
-            'assets/5-6/park.png',
-            'assets/5-6/resim.png',
-            'assets/5-6/tarak.png'];
-        answers = ['ağaç',
-            'araba',
-            'arı',
-            'düğme',
-            'park',
-            'resim',
-            'tarak'
-            ];
-        break;
-    }
+    imagePaths = List<String>.from(
+        fotograflarCevaplar.imagePaths[widget.category]?[widget.section] ?? []
+    );
+    answers = List<String>.from(
+        fotograflarCevaplar.answers[widget.category]?[widget.section] ?? []
+    );
+  }
+  Future<void> _saveProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('category', widget.category);
+    await prefs.setInt('currentIndex', currentIndex);
+    await prefs.setInt('attemptCount', attemptCount);
+    await prefs.setStringList('results', results.map((e) => e.toString()).toList());
+    await prefs.setStringList('completelyWrong', completelyWrong);
+    final wordResultsEncoded = wordResults.entries.map((e) => '${e.key}:${e.value}').toList();
+    await prefs.setStringList('wordResults', wordResultsEncoded);
+    await prefs.setInt('section', widget.section);
   }
 
+  Future<void> _loadProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedCategory = prefs.getString('category');
+    if (savedCategory != widget.category) return; // farklı kategoriyse yükleme
+    final savedSection = prefs.getInt('section');
+    if (savedCategory != widget.category || savedSection != widget.section) return;
+
+    setState(() {
+      currentIndex = prefs.getInt('currentIndex') ?? 0;
+      attemptCount = prefs.getInt('attemptCount') ?? 0;
+      results = (prefs.getStringList('results') ?? []).map((e) => int.parse(e)).toList();
+      completelyWrong = prefs.getStringList('completelyWrong') ?? [];
+      final wordResultsList = prefs.getStringList('wordResults') ?? [];
+      wordResults = {
+        for (var e in wordResultsList)
+          e.split(':')[0]: int.parse(e.split(':')[1])
+      };
+    });
+  }
+  Future<void> _clearProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('category');
+    await prefs.remove('currentIndex');
+    await prefs.remove('attemptCount');
+    await prefs.remove('results');
+    await prefs.remove('completelyWrong');
+    await prefs.remove('wordResults');
+  }
+  Future<void> _saveSectionResult() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    int totalStars = 0;
+    for (int r in results) {
+      if (r == 1 || r == 2) totalStars += 3;
+      else if (r == 3) totalStars += 2;
+      else if (r == 4) totalStars += 1;
+    }
+
+    int avgStars = results.isEmpty ? 0 : (totalStars / results.length).round();
+
+    await prefs.setInt('${widget.category}_section${widget.section}_stars', avgStars);
+    await prefs.setInt('${widget.category}_section${widget.section}_progress', imagePaths.length);
+    await prefs.setBool('${widget.category}_section${widget.section}_completed', true);
+  }
   Future<void> _initSpeech() async {
     _speechEnabled = await _speech.initialize(
       onError: (error) => print('Hata: $error'),
       onStatus: (status) => print('Durum: $status'),
     );
     setState(() {});
+  }
+  Future<void> _initTts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ttsSpeed = prefs.getDouble('ttsSpeed') ?? 0.4;
+    final soundEnabled = prefs.getBool('soundEnabled') ?? true;
+
+    await _tts.setLanguage('tr-TR');
+    await _tts.setSpeechRate(soundEnabled ? ttsSpeed : 0.0);
+    await _tts.setVolume(soundEnabled ? 1.0 : 0.0);
+  }
+  Future<void> _speakWord() async {
+    if (answers.isEmpty) return;
+    await _tts.speak(answers[currentIndex]);
   }
 //mikrofon ve text to speech
   void toggleListening() async {
@@ -168,12 +149,23 @@ class _ImagePageState extends State<ImagePage> {
   //text to speech fonksiyonuyla kontrol
   void checkAnswer(String spoken) {
     if (spoken.toLowerCase().contains(answers[currentIndex])) {
+      _playCorrect();
+      setState(() => showRetry = false);
       results.add(attemptCount + 1);
+      wordResults[answers[currentIndex]] = attemptCount + 1;
       showYildizliEkran(attemptCount +1);
+      _playCorrect();
     } else {
       attemptCount++;
-      if (attemptCount >= 3) {
+      setState(() => showRetry = true);
+      _playWrong();
+      if (attemptCount >= 4) {
         results.add(-1);
+        wordResults[answers[currentIndex]] = -1;
+        wrongAnswers.add(imagePaths[currentIndex]);
+        setState(() => showRetry = false);
+
+
         showYildizliEkran(-1);
       }
     }
@@ -193,23 +185,39 @@ class _ImagePageState extends State<ImagePage> {
     );
   }
   //kaç doğru var
-  void nextImage() {
+  void nextImage() async {
     if (currentIndex < imagePaths.length - 1) {
       setState(() {
         currentIndex++;
         isListening = false;
         attemptCount = 0;
       });
+      Future.delayed(const Duration(milliseconds: 500), () => _speakWord());
+      _saveProgress();
     } else {
+      await _clearProgress();
+      await _saveSectionResult();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => FinishPage(results: results,),//son sayfaya yollama
+          builder: (context) => FinishPage(results: results, category: widget.category),//son sayfaya yollama
         ),
       );
     }
   }
+  Future<void> _playCorrect() async {
+    await _audioPlayer.play(AssetSource('sesler/dogru.m4a'));
+  }
+
+  Future<void> _playWrong() async {
+    await _audioPlayer.play(AssetSource('sesler/yanlis.mp3'));
+  }
 //görüntü ve güzellikler
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -257,7 +265,35 @@ class _ImagePageState extends State<ImagePage> {
                 color: isListening ? Colors.red : Colors.black87,
               ),
             ),
+            if (showRetry)
+              AnimatedOpacity(
+                opacity: showRetry ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 400),
+                child: const Text(
+                  'Tekrar Dene!',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
             const SizedBox(height: 25),
+            ElevatedButton(
+              onPressed: _speakWord,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                minimumSize: const Size(180, 55),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: const Text(
+                'Tekrar Dinle',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 15),
             GestureDetector(
               onTap: toggleListening,
               child: AnimatedContainer(

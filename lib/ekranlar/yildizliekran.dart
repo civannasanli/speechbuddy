@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
-
 class StarPage extends StatefulWidget {
   final int result;
   final VoidCallback onNext;
@@ -16,8 +15,9 @@ class _StarPageState extends State<StarPage> {
 
   int get stars {
     if (widget.result == 1) return 3;
-    if (widget.result == 2) return 2;
-    if (widget.result == 3) return 1;
+    if (widget.result == 2) return 3;
+    if (widget.result == 3) return 2;
+    if (widget.result == 4) return 1;
     return 0;
   }
 

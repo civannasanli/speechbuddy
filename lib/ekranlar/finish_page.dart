@@ -1,21 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
-class FinishPage extends StatelessWidget {
-  final List<int> results;
-  const FinishPage({super.key,required this.results});
+class FinishPage extends StatefulWidget {
+  final List<int> results;final String category;
+  const FinishPage({super.key, required this.results,required this.category});
+
+  @override
+  State<FinishPage> createState() => _FinishPageState();
+}
+
+class _FinishPageState extends State<FinishPage> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  int starsFor(int result) {
+    if (result == 1) return 3;
+    if (result == 2) return 3;
+    if (result == 3) return 2;
+    if (result == 4) return 1;
+    return 0;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer.play(AssetSource('sesler/tamamlandi.mp3'));
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Yıldız hesaplama
-    int starsFor(int result) {
-      if (result == 1) return 3;
-      if (result == 2) return 2;
-      if (result == 3) return 1;
-      return 0;
-    }
     return Scaffold(
       backgroundColor: Colors.lightGreen.shade100,
-      body: Center(
+      body: SingleChildScrollView(
+        child: ConstrainedBox(constraints: BoxConstraints(minHeight: 
+        MediaQuery.of(context).size.height,),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -36,8 +59,8 @@ class FinishPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            ...List.generate(results.length, (i) {
-              int stars = starsFor(results[i]);
+            ...List.generate(widget.results.length, (i) {
+              int stars = starsFor(widget.results[i]);
               return Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -56,7 +79,8 @@ class FinishPage extends StatelessWidget {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.pop(context);
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
@@ -66,7 +90,7 @@ class FinishPage extends StatelessWidget {
                 ),
               ),
               child: const Text(
-                'Ana Sayfaya Dön',
+                'Bölümlere Dön',
                 style: TextStyle(
                   fontSize: 24,
                   color: Colors.white,
@@ -76,6 +100,7 @@ class FinishPage extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
