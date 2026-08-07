@@ -8,6 +8,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -16,6 +17,8 @@ import 'package:confetti/confetti.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:lottie/lottie.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ============================================================
 // Sunucu Ayarı
@@ -24,6 +27,318 @@ import 'package:http/http.dart' as http;
 class Config {
   static const String apiIp = "184.174.34.219:8008";
   static const String apiUrl = "http://$apiIp/predict";
+}
+
+// ============================================================
+// Renk Paleti — canlı turuncu/pembe tema
+// ============================================================
+
+class AppColors {
+  static const Color primary = Color(0xFFFF7A3D); // canlı turuncu
+  static const Color primaryDark = Color(0xFFE8611F);
+  static const Color secondary = Color(0xFFFF4D8D); // canlı pembe
+  static const Color background = Color(0xFFFFF1E6); // sıcak krem
+  static const Color surfaceLight = Color(
+    0xFFFFDCC2,
+  ); // açık turuncu (kilitli/kart zemini)
+}
+
+// ============================================================
+// Köşe Hayvanları — ekranların köşesinde rastgele beliren
+// balon tutan hayvan illüstrasyonları. Yeni hayvan eklemek için
+// sadece assets/hayvanlar/ altına PNG at ve listeye ekle;
+// yeni ekran eklenirse aynı pickRandom() fonksiyonu kullanılır,
+// hiçbir yerde ekran/hayvan eşleşmesi hardcode edilmez.
+// ============================================================
+
+class CornerAnimals {
+  static const List<String> assets = [
+    'assets/hayvanlar/fil.png',
+    'assets/hayvanlar/maymun.png',
+    'assets/hayvanlar/rakun.png',
+    'assets/hayvanlar/ayi.png',
+    'assets/hayvanlar/tavsan.png',
+    'assets/hayvanlar/fil2.png',
+    'assets/hayvanlar/ayi2.png',
+    'assets/hayvanlar/kopek.png',
+    'assets/hayvanlar/civciv.png',
+    'assets/hayvanlar/tavsan2.png',
+  ];
+
+  static final Random _random = Random();
+
+  static String pickRandom() => assets[_random.nextInt(assets.length)];
+}
+
+// ============================================================
+// Gün Serisi (Streak) — bölüm menüsü her açıldığında güncellenir.
+// Aynı gün tekrar açılırsa sayaç değişmez, bir gün atlanırsa sıfırlanır.
+// ============================================================
+
+class StreakService {
+  static String _dateKey(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  static Future<int> touchAndGetStreak() async {
+    final prefs = await SharedPreferences.getInstance();
+    final todayKey = _dateKey(DateTime.now());
+    final lastKey = prefs.getString('streak_last_date');
+    int streak = prefs.getInt('streak_count') ?? 0;
+
+    if (lastKey == todayKey) {
+      // bugün zaten sayıldı, değiştirme
+    } else if (lastKey != null) {
+      final last = DateTime.parse(lastKey);
+      final today = DateTime.parse(todayKey);
+      streak = today.difference(last).inDays == 1 ? streak + 1 : 1;
+    } else {
+      streak = 1;
+    }
+
+    await prefs.setInt('streak_count', streak);
+    await prefs.setString('streak_last_date', todayKey);
+    return streak;
+  }
+}
+
+// ============================================================
+// Hayvan Koleksiyonu — çocuğun bugüne kadar köşede gördüğü
+// (rastgele gelen) hayvanların kalıcı kaydı. "Rozetler" ekranında
+// koleksiyon tamamlanma durumunu göstermek için kullanılıyor.
+// ============================================================
+
+class AnimalCollectionService {
+  static Future<Set<String>> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getStringList('animals_collected') ?? []).toSet();
+  }
+
+  static Future<void> recordSeen(String assetPath) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = (prefs.getStringList('animals_collected') ?? []).toSet();
+    if (current.add(assetPath)) {
+      await prefs.setStringList('animals_collected', current.toList());
+    }
+  }
+}
+
+// ============================================================
+// Kelime Geçmişi — Veli/Terapist Paneli için kalıcı kayıt.
+// Her bölüm bitişinde denenen kelimelerin sonucu (doğru/yanlış,
+// tarih) burada birikiyor; panel bunu kelime bazında özetliyor.
+// ============================================================
+
+class WordHistoryService {
+  static const _key = 'kelime_gecmisi';
+
+  static Future<void> recordResult({
+    required String word,
+    required bool isPathological,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_key) ?? [];
+    raw.add(
+      jsonEncode({
+        'word': word,
+        'isPathological': isPathological,
+        'date': DateTime.now().toIso8601String(),
+      }),
+    );
+    await prefs.setStringList(_key, raw);
+  }
+
+  static Future<List<Map<String, dynamic>>> loadHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_key) ?? [];
+    return raw
+        .map((s) => jsonDecode(s) as Map<String, dynamic>)
+        .toList(growable: false);
+  }
+
+  // Kelime -> {deneme, dogru, sonTarih, sonSonucDogruMu}
+  static Future<List<WordStat>> aggregate() async {
+    final history = await loadHistory();
+    final Map<String, WordStat> byWord = {};
+    for (final entry in history) {
+      final word = entry['word'] as String;
+      final isPathological = entry['isPathological'] as bool;
+      final date = DateTime.parse(entry['date'] as String);
+      final stat = byWord.putIfAbsent(word, () => WordStat(word: word));
+      stat.attempts++;
+      if (!isPathological) stat.correct++;
+      if (stat.lastDate == null || date.isAfter(stat.lastDate!)) {
+        stat.lastDate = date;
+        stat.lastCorrect = !isPathological;
+      }
+    }
+    final list = byWord.values.toList();
+    list.sort((a, b) => a.successRate.compareTo(b.successRate));
+    return list;
+  }
+}
+
+class WordStat {
+  final String word;
+  int attempts = 0;
+  int correct = 0;
+  DateTime? lastDate;
+  bool lastCorrect = true;
+
+  WordStat({required this.word});
+
+  double get successRate => attempts == 0 ? 1.0 : correct / attempts;
+}
+
+// ============================================================
+// GradientButton — ana çağrı-eylem butonları için ortak görsel:
+// gradient dolgu + yumuşak renkli gölge. Basılınca hafifçe küçülür.
+// ============================================================
+
+class GradientButton extends StatefulWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final double width;
+  final double height;
+  final double fontSize;
+  final List<Color> colors;
+
+  const GradientButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.width = 220,
+    this.height = 70,
+    this.fontSize = 26,
+    this.colors = const [AppColors.primary, AppColors.secondary],
+  });
+
+  @override
+  State<GradientButton> createState() => _GradientButtonState();
+}
+
+class _GradientButtonState extends State<GradientButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onPressed,
+      child: AnimatedScale(
+        scale: _pressed ? 0.94 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        child: Container(
+          width: widget.width,
+          height: widget.height,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: widget.colors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: widget.colors.last.withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Text(
+            widget.label,
+            style: TextStyle(
+              fontSize: widget.fontSize,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// PopStar — bölüm kartlarındaki yıldızlar sırayla "pop" ile belirir.
+// ============================================================
+
+class PopStar extends StatefulWidget {
+  final bool filled;
+  final Duration delay;
+  final double size;
+
+  const PopStar({
+    super.key,
+    required this.filled,
+    required this.delay,
+    this.size = 22,
+  });
+
+  @override
+  State<PopStar> createState() => _PopStarState();
+}
+
+class _PopStarState extends State<PopStar> {
+  double _scale = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(widget.delay, () {
+      if (mounted) setState(() => _scale = 1);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: _scale,
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.elasticOut,
+      child: Icon(
+        widget.filled ? Icons.star : Icons.star_border,
+        color: Colors.amber,
+        size: widget.size,
+      ),
+    );
+  }
+}
+
+// ============================================================
+// Ortak sayfa geçişi — hafif kayma + solma. Uygulamadaki her
+// Navigator.push burayı kullanır, tek yerden ayarlanır.
+// ============================================================
+
+class SlideFadeRoute<T> extends PageRouteBuilder<T> {
+  SlideFadeRoute({required WidgetBuilder builder})
+    : super(
+        transitionDuration: const Duration(milliseconds: 320),
+        reverseTransitionDuration: const Duration(milliseconds: 260),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            builder(context),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return FadeTransition(
+            opacity: curved,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.06),
+                end: Offset.zero,
+              ).animate(curved),
+              child: child,
+            ),
+          );
+        },
+      );
 }
 
 // ============================================================
@@ -44,7 +359,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Okuma Prototipi',
       theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFFFFF8E1),
+        scaffoldBackgroundColor: AppColors.background,
+        textTheme: GoogleFonts.baloo2TextTheme(),
+        appBarTheme: AppBarTheme(
+          titleTextStyle: GoogleFonts.baloo2(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
       ),
       home: const HomePage(),
     );
@@ -62,14 +385,14 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.primary,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
+                SlideFadeRoute(builder: (context) => const SettingsPage()),
               );
             },
           ),
@@ -80,29 +403,25 @@ class HomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/resimler/parrot.png',
-              width: 180,
-              height: 180,
-              errorBuilder: (c, e, s) => const Icon(Icons.pets, size: 150, color: Colors.green),
+              'assets/maskot/maskot.png',
+              width: 220,
+              height: 220,
+              errorBuilder: (c, e, s) =>
+                  const Icon(Icons.pets, size: 150, color: AppColors.primary),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
+            GradientButton(
+              label: 'Başla!',
+              width: 220,
+              height: 100,
+              fontSize: 38,
+              colors: const [AppColors.secondary, AppColors.primary],
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const BolumSecPage()),
+                  SlideFadeRoute(builder: (context) => const BolumSecPage()),
                 );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                minimumSize: const Size(220, 100),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                elevation: 8,
-              ),
-              child: const Text(
-                'Başla!',
-                style: TextStyle(fontSize: 38, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
             ),
           ],
         ),
@@ -209,6 +528,7 @@ class BolumSecPage extends StatefulWidget {
 class _BolumSecPageState extends State<BolumSecPage> {
   List<int> bolumStars = [];
   List<bool> bolumCompleted = [];
+  int streak = 0;
 
   @override
   void initState() {
@@ -226,10 +546,12 @@ class _BolumSecPageState extends State<BolumSecPage> {
       stars.add(prefs.getInt('bolum${i}_stars') ?? 0);
       completed.add(prefs.getBool('bolum${i}_completed') ?? false);
     }
+    final currentStreak = await StreakService.touchAndGetStreak();
 
     setState(() {
       bolumStars = stars;
       bolumCompleted = completed;
+      streak = currentStreak;
     });
   }
 
@@ -241,69 +563,425 @@ class _BolumSecPageState extends State<BolumSecPage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.lightBlue.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Bölümler'),
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.primary,
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.insights, color: Colors.white),
+            tooltip: 'Veli / Terapist Paneli',
+            onPressed: () {
+              Navigator.push(
+                context,
+                SlideFadeRoute(builder: (context) => const VeliPanelPage()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.emoji_events, color: Colors.white),
+            tooltip: 'Rozetlerim',
+            onPressed: () {
+              Navigator.push(
+                context,
+                SlideFadeRoute(
+                  builder: (context) => RozetlerPage(
+                    bolumStars: bolumStars,
+                    bolumCompleted: bolumCompleted,
+                    streak: streak,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          if (streak > 0)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.local_fire_department,
+                    color: Colors.deepOrange,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    streak == 1
+                        ? 'Bugün pratik yaptın, harika başlangıç!'
+                        : '$streak gün üst üste pratik yapıyorsun!',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: count,
+              itemBuilder: (context, i) {
+                final isLocked = i > 0 && !bolumCompleted[i - 1];
+                final wordCount = AppWords.bolumler[i].length;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: isLocked
+                          ? null
+                          : () {
+                              Navigator.push(
+                                context,
+                                SlideFadeRoute(
+                                  builder: (context) =>
+                                      BolumPlayPage(bolumIndex: i),
+                                ),
+                              ).then((_) => _loadData());
+                            },
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: isLocked
+                                    ? Colors.grey.shade300
+                                    : AppColors.surfaceLight,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isLocked ? Icons.lock : Icons.play_arrow,
+                                color: isLocked
+                                    ? Colors.grey
+                                    : AppColors.primary,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Bölüm ${i + 1}',
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  '$wordCount kelime',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Row(
+                              children: List.generate(
+                                3,
+                                (s) => PopStar(
+                                  filled: s < bolumStars[i],
+                                  delay: Duration(
+                                    milliseconds: 100 * s + 60 * i,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// VeliPanelPage — kelime bazlı geçmiş özeti. En çok zorlanılan
+// (başarı oranı düşük) kelimeler üstte gösterilir, veli/terapist
+// çocuğun hangi seslerde zorlandığını zaman içinde görebilir.
+// ============================================================
+
+class VeliPanelPage extends StatefulWidget {
+  const VeliPanelPage({super.key});
+
+  @override
+  State<VeliPanelPage> createState() => _VeliPanelPageState();
+}
+
+class _VeliPanelPageState extends State<VeliPanelPage> {
+  List<WordStat>? stats;
+
+  @override
+  void initState() {
+    super.initState();
+    WordHistoryService.aggregate().then((s) {
+      if (!mounted) return;
+      setState(() => stats = s);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Veli / Terapist Paneli'),
+        backgroundColor: AppColors.primary,
+        centerTitle: true,
+      ),
+      body: stats == null
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
+          : stats!.isEmpty
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Henüz bir bölüm tamamlanmadı — çocuğun ilk pratiğinden sonra kelime bazlı sonuçlar burada birikecek.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: stats!.length,
+              itemBuilder: (context, i) {
+                final s = stats![i];
+                final pct = (s.successRate * 100).round();
+                final zayif = s.successRate < 0.6;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: zayif
+                            ? Colors.red.shade100
+                            : Colors.green.shade100,
+                        child: Icon(
+                          zayif ? Icons.priority_high : Icons.check,
+                          color: zayif ? Colors.red : Colors.green,
+                        ),
+                      ),
+                      title: Text(
+                        s.word.toUpperCase(),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        '${s.attempts} deneme • Son sonuç: ${s.lastCorrect ? "doğru" : "yanlış"}',
+                      ),
+                      trailing: Text(
+                        '%$pct',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: zayif ? Colors.red : Colors.green,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+// ============================================================
+// RozetlerPage — kazanılan/kilitli rozetler. Tamamlanma/yıldız/
+// seri rozetleri BolumSecPage'den gelen veriyle anında hesaplanır,
+// hayvan koleksiyonu rozeti için kalıcı kayıt async yükleniyor.
+// ============================================================
+
+class _RozetTanimi {
+  final String baslik;
+  final String aciklama;
+  final IconData icon;
+  final bool kazanildi;
+  const _RozetTanimi({
+    required this.baslik,
+    required this.aciklama,
+    required this.icon,
+    required this.kazanildi,
+  });
+}
+
+class RozetlerPage extends StatefulWidget {
+  final List<int> bolumStars;
+  final List<bool> bolumCompleted;
+  final int streak;
+
+  const RozetlerPage({
+    super.key,
+    required this.bolumStars,
+    required this.bolumCompleted,
+    required this.streak,
+  });
+
+  @override
+  State<RozetlerPage> createState() => _RozetlerPageState();
+}
+
+class _RozetlerPageState extends State<RozetlerPage> {
+  int? collectedAnimalCount;
+
+  @override
+  void initState() {
+    super.initState();
+    AnimalCollectionService.load().then((set) {
+      if (!mounted) return;
+      setState(() => collectedAnimalCount = set.length);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ilkAdim = widget.bolumCompleted.any((c) => c);
+    final yildizUstasi = widget.bolumStars.any((s) => s >= 3);
+    final tumBolumler =
+        widget.bolumCompleted.isNotEmpty &&
+        widget.bolumCompleted.every((c) => c);
+    final seri3 = widget.streak >= 3;
+    final seri7 = widget.streak >= 7;
+    final koleksiyonTam =
+        collectedAnimalCount != null &&
+        collectedAnimalCount! >= CornerAnimals.assets.length;
+
+    final rozetler = <_RozetTanimi>[
+      _RozetTanimi(
+        baslik: 'İlk Adım',
+        aciklama: 'Bir bölümü tamamla',
+        icon: Icons.flag,
+        kazanildi: ilkAdim,
+      ),
+      _RozetTanimi(
+        baslik: 'Yıldız Ustası',
+        aciklama: 'Bir bölümde 3 yıldız al',
+        icon: Icons.star,
+        kazanildi: yildizUstasi,
+      ),
+      _RozetTanimi(
+        baslik: '3 Günlük Seri',
+        aciklama: '3 gün üst üste pratik yap',
+        icon: Icons.local_fire_department,
+        kazanildi: seri3,
+      ),
+      _RozetTanimi(
+        baslik: '7 Günlük Seri',
+        aciklama: '7 gün üst üste pratik yap',
+        icon: Icons.whatshot,
+        kazanildi: seri7,
+      ),
+      _RozetTanimi(
+        baslik: 'Hayvan Koleksiyoncusu',
+        aciklama: 'Ekranlarda çıkan tüm hayvanları gör',
+        icon: Icons.pets,
+        kazanildi: koleksiyonTam,
+      ),
+      _RozetTanimi(
+        baslik: 'Bölüm Şampiyonu',
+        aciklama: 'Tüm bölümleri tamamla',
+        icon: Icons.emoji_events,
+        kazanildi: tumBolumler,
+      ),
+    ];
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Rozetlerim'),
+        backgroundColor: AppColors.primary,
         centerTitle: true,
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(20),
-        itemCount: count,
+        itemCount: rozetler.length,
         itemBuilder: (context, i) {
-          final isLocked = i > 0 && !bolumCompleted[i - 1];
-          final wordCount = AppWords.bolumler[i].length;
-
+          final r = rozetler[i];
           return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.only(bottom: 14),
             child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: isLocked
-                    ? null
-                    : () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => BolumPlayPage(bolumIndex: i)),
-                  ).then((_) => _loadData());
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: isLocked ? Colors.grey.shade300 : Colors.green.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isLocked ? Icons.lock : Icons.play_arrow,
-                          color: isLocked ? Colors.grey : Colors.green,
-                          size: 28,
-                        ),
+              elevation: r.kazanildi ? 4 : 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: r.kazanildi
+                            ? AppColors.surfaceLight
+                            : Colors.grey.shade200,
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 20),
-                      Column(
+                      child: Icon(
+                        r.kazanildi ? r.icon : Icons.lock_outline,
+                        color: r.kazanildi ? AppColors.primary : Colors.grey,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 18),
+                    Expanded(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Bölüm ${i + 1}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 5),
-                          Text('$wordCount kelime', style: const TextStyle(fontSize: 15, color: Colors.grey)),
+                          Text(
+                            r.baslik,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: r.kazanildi ? Colors.black : Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            r.aciklama,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ],
                       ),
-                      const Spacer(),
-                      Row(
-                        children: List.generate(3, (s) => Icon(
-                          s < bolumStars[i] ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
-                          size: 22,
-                        )),
-                      ),
-                    ],
-                  ),
+                    ),
+                    if (r.kazanildi)
+                      const Icon(Icons.check_circle, color: Colors.green),
+                  ],
                 ),
               ),
             ),
@@ -330,10 +1008,13 @@ class BolumPlayPage extends StatefulWidget {
   State<BolumPlayPage> createState() => _BolumPlayPageState();
 }
 
-class _BolumPlayPageState extends State<BolumPlayPage> {
+class _BolumPlayPageState extends State<BolumPlayPage>
+    with TickerProviderStateMixin {
   late List<Map<String, String>> words; // bölümdeki tüm kelimeler (9 ya da 5)
-  late List<List<Map<String, String>>> triplets; // 3'erli (son parça 2 olabilir)
-  late List<int> tripletOffsets; // her tripletin flat listedeki başlangıç indeksi
+  late List<List<Map<String, String>>>
+  triplets; // 3'erli (son parça 2 olabilir)
+  late List<int>
+  tripletOffsets; // her tripletin flat listedeki başlangıç indeksi
 
   int tripletIndex = 0;
   _Stage stage = _Stage.playing;
@@ -353,6 +1034,30 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
   late ConfettiController _confettiController;
   Timer? _timer;
 
+  late AnimationController _transitionController;
+  Duration? _transitionDuration;
+  bool _isTransitioning = false;
+  Timer? _encourageDelayTimer;
+
+  late String _cornerAnimalAsset;
+
+  static const List<String> _encouragements = [
+    'Harikasın!',
+    'Çok iyi!',
+    'Süpersin!',
+    'Çok güzel okudun!',
+    'Bravo!',
+    'Aferin sana!',
+  ];
+  final Random _random = Random();
+
+  Future<void> _speakEncouragement() async {
+    final phrase = _encouragements[_random.nextInt(_encouragements.length)];
+    try {
+      await _tts.speak(phrase);
+    } catch (_) {}
+  }
+
   @override
   void initState() {
     super.initState();
@@ -369,8 +1074,18 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
     audioPaths = List.filled(words.length, null);
     apiResults = List.filled(words.length, null);
     completedTap = List.filled(triplets[0].length, false);
+    _cornerAnimalAsset = CornerAnimals.pickRandom();
+    AnimalCollectionService.recordSeen(_cornerAnimalAsset);
 
-    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
+    _transitionController = AnimationController(vsync: this);
+    _transitionController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && _isTransitioning) {
+        setState(() => _isTransitioning = false);
+      }
+    });
     _initTts();
   }
 
@@ -396,7 +1111,9 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
     final globalIndex = tripletOffsets[tripletIndex] + localIndex;
     final word = currentTripletWords[localIndex]['word']!;
 
-    await _tts.speak(word); // awaitSpeakCompletion(true) sayesinde bitene kadar bekler
+    await _tts.speak(
+      word,
+    ); // awaitSpeakCompletion(true) sayesinde bitene kadar bekler
     if (!mounted) return;
     await _startRecording(globalIndex, localIndex);
   }
@@ -405,7 +1122,8 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
     if (!await _audioRecorder.hasPermission()) return;
 
     final dir = await getTemporaryDirectory();
-    final filePath = '${dir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    final filePath =
+        '${dir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
     await _audioRecorder.start(
       const RecordConfig(encoder: AudioEncoder.aacLc, sampleRate: 16000),
@@ -444,6 +1162,9 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
           audioPaths[globalIndex] = path;
           _uploadInBackground(globalIndex, path);
         }
+
+        await _speakEncouragement();
+        if (!mounted) return;
 
         _checkTripletDone();
       }
@@ -484,6 +1205,12 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
       setState(() => stage = _Stage.encourage);
       _confettiController.play();
       _playEncourageSound();
+      // "Aferin!" ekranı bir süre görünsün, sonra kedi geçişi başlasın.
+      _encourageDelayTimer?.cancel();
+      _encourageDelayTimer = Timer(
+        const Duration(milliseconds: 1400),
+        _startTransition,
+      );
     }
   }
 
@@ -495,34 +1222,55 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
   }
 
   // ------------------------------------------------------------
-  // "Devam Et" — analiz bitmiş olsun olmasın ilerler.
-  // Son triplet ise, final ekrana geçmeden önce bekleyen analizleri bekler.
+  // "Aferin!" ekranından sonra tıklama olmadan otomatik başlar:
+  // hedef içerik (sonraki triplet ya da final) hemen state'e yazılır,
+  // kedi geçiş animasyonu bu içeriği eskisinin üzerinden "açığa çıkarır".
+  // Son triplet ise, bekleyen analizler arka planda beklenir.
   // ------------------------------------------------------------
-  Future<void> _onDevamEt() async {
+  void _startTransition() {
+    if (!mounted || stage != _Stage.encourage) return;
+
     if (tripletIndex < triplets.length - 1) {
       setState(() {
         tripletIndex++;
-        stage = _Stage.playing;
         completedTap = List.filled(currentTripletWords.length, false);
+        stage = _Stage.playing;
+        _isTransitioning = true;
+        _cornerAnimalAsset = CornerAnimals.pickRandom();
       });
+      AnimalCollectionService.recordSeen(_cornerAnimalAsset);
     } else {
-      // Son triplet: sonuç ekranına geçmeden bekleyen yüklemeleri bekle
-      setState(() => stage = _Stage.final_); // hemen geçiş yap, altta bekleme göstergesi olacak
-      await Future.wait(pendingUploads);
-      if (!mounted) return;
-      setState(() {}); // sonuçlar geldiyse ekranı yenile
-      await _saveBolumResult();
+      setState(() {
+        stage = _Stage.final_;
+        _isTransitioning = true;
+      });
+      Future.wait(pendingUploads).then((_) async {
+        if (!mounted) return;
+        setState(() {});
+        await _saveBolumResult();
+      });
     }
+
+    _transitionController.reset();
+    if (_transitionDuration != null) {
+      _transitionController.forward();
+    }
+    // Süre henüz bilinmiyorsa (ilk oynatma), Lottie'nin onLoaded'ı forward'ı tetikler.
   }
 
   Future<void> _saveBolumResult() async {
     final prefs = await SharedPreferences.getInstance();
 
     int totalStars = 0;
-    for (final res in apiResults) {
-      if (res != null && res['error'] != true && res['is_pathological'] == false) {
-        totalStars += 3;
-      }
+    for (int i = 0; i < apiResults.length; i++) {
+      final res = apiResults[i];
+      if (res == null || res['error'] == true) continue;
+      final isPathological = res['is_pathological'] == true;
+      if (!isPathological) totalStars += 3;
+      await WordHistoryService.recordResult(
+        word: words[i]['word']!,
+        isPathological: isPathological,
+      );
     }
     final avgStars = words.isEmpty ? 0 : (totalStars / words.length).round();
 
@@ -533,7 +1281,9 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
   @override
   void dispose() {
     _timer?.cancel();
+    _encourageDelayTimer?.cancel();
     _confettiController.dispose();
+    _transitionController.dispose();
     _audioPlayer.dispose();
     _audioRecorder.dispose();
     super.dispose();
@@ -541,14 +1291,66 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
 
   @override
   Widget build(BuildContext context) {
-    switch (stage) {
-      case _Stage.playing:
-        return _buildTripletView();
-      case _Stage.encourage:
-        return _buildEncourageView();
-      case _Stage.final_:
-        return _buildFinalView();
-    }
+    final Widget currentView = switch (stage) {
+      _Stage.playing => _buildTripletView(),
+      _Stage.encourage => _buildEncourageView(),
+      _Stage.final_ => _buildFinalView(),
+    };
+
+    if (!_isTransitioning) return currentView;
+    return _buildCatWipeTransition(newContent: currentView);
+  }
+
+  // ------------------------------------------------------------
+  // Geçiş: kedi aşağıdan yukarı süzülür, geçtiği yerde eski ekran
+  // (Aferin!) yerini yeni ekrana bırakır. Fade YOK, sadece wipe.
+  // ------------------------------------------------------------
+  Widget _buildCatWipeTransition({required Widget newContent}) {
+    return AnimatedBuilder(
+      animation: _transitionController,
+      builder: (context, _) {
+        final t = _transitionController.value;
+        final size = MediaQuery.of(context).size;
+        final catY = size.height * (1 - t); // ekranın altından üstüne
+        const catSize = 340.0;
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            newContent,
+            ClipRect(
+              clipper: _TopWipeClipper(catY),
+              child: _buildEncourageView(),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: (catY - catSize / 2).clamp(-catSize, size.height),
+              child: Center(
+                child: SizedBox(
+                  width: catSize,
+                  height: catSize,
+                  child: Lottie.asset(
+                    'assets/lottie/balon.lottie',
+                    controller: _transitionController,
+                    repeat: false,
+                    onLoaded: (composition) {
+                      if (_transitionDuration != null) return;
+                      _transitionDuration = composition.duration;
+                      _transitionController.duration = composition.duration;
+                      if (_isTransitioning &&
+                          !_transitionController.isAnimating) {
+                        _transitionController.forward();
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // ------------------------------------------------------------
@@ -558,55 +1360,76 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
     final tw = currentTripletWords;
 
     return Scaffold(
-      backgroundColor: Colors.lightBlue.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('Bölüm ${widget.bolumIndex + 1}'),
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.primary,
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Text(
-              '${tripletIndex + 1} / ${triplets.length}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Bir resme dokun ve kelimeyi oku!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 30),
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  child: tw.length >= 3
-                      ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _imageCard(0),
-                          _imageCard(1),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      _imageCard(2),
-                    ],
-                  )
-                      : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(tw.length, (i) => _imageCard(i)),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Text(
+                  '${tripletIndex + 1} / ${triplets.length}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Bir resme dokun ve kelimeyi oku!',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 45),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: SingleChildScrollView(
+                      child: tw.length >= 3
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [_imageCard(0), _imageCard(1)],
+                                ),
+                                const SizedBox(height: 24),
+                                _imageCard(2),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: List.generate(
+                                tw.length,
+                                (i) => _imageCard(i),
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              child: Image.asset(
+                _cornerAnimalAsset,
+                width: 220,
+                height: 220,
+                errorBuilder: (c, e, s) => const SizedBox.shrink(),
               ),
             ),
-            const SizedBox(height: 10),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -623,40 +1446,42 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
     return GestureDetector(
       onTap: () => _onImageTap(localIndex),
       child: SizedBox(
-        width: 140,
-        height: 140,
+        width: 170,
+        height: 170,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isThisRecording
-                      ? Colors.red
-                      : (isDone ? Colors.green : Colors.grey.shade300),
-                  width: isThisRecording ? 3 : 2,
-                ),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, spreadRadius: 1),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Image.asset(
-                  tw[localIndex]['image']!,
-                  fit: BoxFit.contain,
-                  errorBuilder: (c, e, s) => const Icon(Icons.image, size: 50),
-                ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                tw[localIndex]['image']!,
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) => const Icon(Icons.image, size: 60),
               ),
             ),
+            if (isThisRecording)
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.red, width: 4),
+                ),
+              ),
+            if (isDone && !isThisRecording)
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.green, width: 3),
+                ),
+              ),
             if (isDone)
               Positioned(
                 top: 6,
                 right: 6,
                 child: Container(
-                  decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
                   padding: const EdgeInsets.all(4),
                   child: const Icon(Icons.check, color: Colors.white, size: 16),
                 ),
@@ -670,7 +1495,10 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
                     child: CircularProgressIndicator(
                       value: recordProgress,
                       strokeWidth: 5,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Colors.red,
+                      ),
+                      backgroundColor: Colors.white70,
                     ),
                   ),
                 ),
@@ -686,7 +1514,7 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
   // ------------------------------------------------------------
   Widget _buildEncourageView() {
     return Scaffold(
-      backgroundColor: Colors.lightBlue.shade50,
+      backgroundColor: AppColors.background,
       body: Stack(
         alignment: Alignment.topCenter,
         children: [
@@ -700,18 +1528,18 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Aferin!', style: TextStyle(fontSize: 44, fontWeight: FontWeight.bold, color: Colors.green)),
-                const SizedBox(height: 12),
-                const Text('Muhteşemsin, devam et!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 50),
-                ElevatedButton(
-                  onPressed: _onDevamEt,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    minimumSize: const Size(200, 65),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                const Text(
+                  'Aferin!',
+                  style: TextStyle(
+                    fontSize: 44,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.secondary,
                   ),
-                  child: const Text('Devam Et', style: TextStyle(fontSize: 24, color: Colors.white)),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Muhteşemsin!',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -728,87 +1556,121 @@ class _BolumPlayPageState extends State<BolumPlayPage> {
     final stillWaiting = apiResults.any((r) => r == null);
 
     return Scaffold(
-      backgroundColor: Colors.lightGreen.shade100,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Bölüm Sonucu'),
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.primary,
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
       body: stillWaiting
           ? const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Colors.green),
-            SizedBox(height: 20),
-            Text('Sonuçlar hazırlanıyor...', style: TextStyle(fontSize: 18, color: Colors.grey)),
-          ],
-        ),
-      )
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: AppColors.primary),
+                  SizedBox(height: 20),
+                  Text(
+                    'Sonuçlar hazırlanıyor...',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
           : Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(20.0),
-            child: Text(
-              'Harika, Tamamladın!',
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.green),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: words.length,
-              itemBuilder: (context, index) {
-                final res = apiResults[index];
-                final word = words[index]['word'];
-
-                final bool isError = res == null || res['error'] == true;
-                final bool isPathological = res != null && res['is_pathological'] == true;
-                final double accuracy = isError
-                    ? 0
-                    : (1 - ((res['pathology_probability'] ?? 1.0) as num)) * 100;
-
-                return Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: isError ? Colors.grey : (isPathological ? Colors.red : Colors.green),
-                      child: Icon(
-                        isError ? Icons.warning : (isPathological ? Icons.close : Icons.check),
-                        color: Colors.white,
-                      ),
-                    ),
-                    title: Text(word?.toUpperCase() ?? "RESİM", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-                    subtitle: Text(isError ? "Analiz edilemedi" : (isPathological ? "Hatalı Telaffuz" : "Harika Telaffuz!")),
-                    trailing: isError
-                        ? null
-                        : Text(
-                      "%${accuracy.toStringAsFixed(0)}",
-                      style: TextStyle(fontWeight: FontWeight.bold, color: isPathological ? Colors.red : Colors.green),
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text(
+                    'Harika, Tamamladın!',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.secondary,
                     ),
                   ),
-                );
-              },
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: words.length,
+                    itemBuilder: (context, index) {
+                      final res = apiResults[index];
+                      final word = words[index]['word'];
+
+                      final bool isError = res == null || res['error'] == true;
+                      final bool isPathological =
+                          res != null && res['is_pathological'] == true;
+                      final double accuracy = isError
+                          ? 0
+                          : (1 -
+                                    ((res['pathology_probability'] ?? 1.0)
+                                        as num)) *
+                                100;
+
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: isError
+                                ? Colors.grey
+                                : (isPathological ? Colors.red : Colors.green),
+                            child: Icon(
+                              isError
+                                  ? Icons.warning
+                                  : (isPathological
+                                        ? Icons.close
+                                        : Icons.check),
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: Text(
+                            word?.toUpperCase() ?? "RESİM",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17,
+                            ),
+                          ),
+                          subtitle: Text(
+                            isError
+                                ? "Analiz edilemedi"
+                                : (isPathological
+                                      ? "Hatalı Telaffuz"
+                                      : "Harika Telaffuz!"),
+                          ),
+                          trailing: isError
+                              ? null
+                              : Text(
+                                  "%${accuracy.toStringAsFixed(0)}",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isPathological
+                                        ? Colors.red
+                                        : Colors.green,
+                                  ),
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: GradientButton(
+                    label: 'Bölümlere Dön',
+                    width: double.infinity,
+                    height: 60,
+                    fontSize: 22,
+                    onPressed: () {
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    },
+                  ),
+                ),
+              ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.popUntil(context, (route) => route.isFirst);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                minimumSize: const Size(double.infinity, 60),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-              child: const Text("Bölümlere Dön", style: TextStyle(fontSize: 22, color: Colors.white)),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -851,10 +1713,10 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.lightBlue.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Ayarlar'),
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.primary,
         centerTitle: true,
       ),
       body: Padding(
@@ -873,7 +1735,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       setState(() => soundEnabled = val);
                       _saveSettings();
                     },
-                    activeThumbColor: Colors.green,
+                    activeThumbColor: AppColors.primary,
                   ),
                 ],
               ),
@@ -895,7 +1757,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     : ttsSpeed == 1.0
                     ? 'Çok Hızlı'
                     : 'Normal',
-                activeColor: Colors.green,
+                activeColor: AppColors.primary,
                 onChanged: (val) {
                   setState(() => ttsSpeed = val);
                 },
@@ -909,4 +1771,23 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+}
+
+// ============================================================
+// Kedi geçişinde eski ekranı üstten alta doğru gösteren clipper —
+// altta kalan kısım zaten yeni ekranı gösteriyor (kedi orada).
+// ============================================================
+class _TopWipeClipper extends CustomClipper<Rect> {
+  final double visibleHeight;
+  _TopWipeClipper(this.visibleHeight);
+
+  @override
+  Rect getClip(Size size) {
+    final h = visibleHeight.clamp(0.0, size.height);
+    return Rect.fromLTWH(0, 0, size.width, h);
+  }
+
+  @override
+  bool shouldReclip(covariant _TopWipeClipper oldClipper) =>
+      oldClipper.visibleHeight != visibleHeight;
 }

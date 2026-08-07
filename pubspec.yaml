@@ -23,6 +23,8 @@ dependencies:
   record: ^7.1.1
   path_provider: ^2.1.2
   http: ^1.2.1
+  lottie: ^3.1.3
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -31,6 +33,8 @@ dev_dependencies:
   # --- Yeni Eklenen Kod Üreticiler ---
   build_runner: ^2.4.9
   mobx_codegen: ^2.6.0+1
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.4
 
 flutter:
   uses-material-design: true
@@ -40,4 +44,23 @@ flutter:
     - assets/4-5/
     - assets/5-6/
     - assets/sesler/
+    - assets/lottie/
+    - assets/hayvanlar/
+    - assets/icon/
+    - assets/maskot/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#FF7A3D"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+
+flutter_native_splash:
+  color: "#FFF1E6"
+  image: "assets/icon/icon_foreground.png"
+  android_12:
+    image: "assets/icon/icon_foreground.png"
+    icon_background_color: "#FF7A3D"
+    color: "#FFF1E6"
 
