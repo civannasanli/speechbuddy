@@ -29,6 +29,31 @@ class Config {
   static const String apiUrl = "http://$apiIp/predict";
 }
 
+// Kayıt sırasında bu dBFS değerini hiç geçmezse "çocuk konuşmadı" kabul
+// edilir — kayıt modele hiç gönderilmez, tekrar denemesi istenir.
+// Not: mikrofon/ortam gürültüsüne göre ayar gerekebilir.
+const double kSilenceThresholdDb = -35.0;
+
+// Ses dosyasını modele gönderir — hem BolumPlayPage hem AlistirmalarPage kullanır.
+Future<Map<String, dynamic>> sendPronunciationToApi(String filePath) async {
+  try {
+    final uri = Uri.parse(Config.apiUrl);
+    final request = http.MultipartRequest('POST', uri);
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      return {"error": true, "message": "API Hatası: ${response.statusCode}"};
+    }
+  } catch (e) {
+    return {"error": true, "message": "Bağlantı koptu!"};
+  }
+}
+
 // ============================================================
 // Renk Paleti — canlı turuncu/pembe tema
 // ============================================================
@@ -378,54 +403,126 @@ class MyApp extends StatelessWidget {
 // HomePage
 // ============================================================
 
-class HomePage extends StatelessWidget {
+// Kedi konuşma balonuyla merhaba diyor, buton yok — animasyon bitince
+// (ya da 4sn içinde bir şeyler ters giderse güvenlik zamanlayıcısıyla)
+// otomatik olarak menüye geçiyor.
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  Timer? _safetyTimer;
+  bool _navigated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this);
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) _goToMenu();
+    });
+    _safetyTimer = Timer(const Duration(seconds: 4), _goToMenu);
+  }
+
+  void _goToMenu() {
+    if (_navigated || !mounted) return;
+    _navigated = true;
+    Navigator.pushReplacement(
+      context,
+      SlideFadeRoute(builder: (context) => const MenuPage()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _safetyTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                SlideFadeRoute(builder: (context) => const SettingsPage()),
-              );
-            },
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/maskot/maskot.png',
-              width: 220,
-              height: 220,
-              errorBuilder: (c, e, s) =>
-                  const Icon(Icons.pets, size: 150, color: AppColors.primary),
-            ),
-            const SizedBox(height: 20),
-            GradientButton(
-              label: 'Başla!',
-              width: 220,
-              height: 100,
-              fontSize: 38,
-              colors: const [AppColors.secondary, AppColors.primary],
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  SlideFadeRoute(builder: (context) => const BolumSecPage()),
-                );
-              },
+            const _SpeechBubble(text: 'Merhaba! Hazır mısın?'),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: 260,
+              height: 260,
+              child: Lottie.asset(
+                'assets/lottie/waving_kitty.lottie',
+                controller: _controller,
+                repeat: false,
+                errorBuilder: (c, e, s) => Image.asset(
+                  'assets/maskot/maskot.png',
+                  errorBuilder: (c, e, s) => const Icon(
+                    Icons.pets,
+                    size: 150,
+                    color: AppColors.primary,
+                  ),
+                ),
+                onLoaded: (composition) {
+                  _controller.duration = composition.duration;
+                  _controller.forward();
+                },
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+// Basit konuşma balonu — beyaz kutu + 45 derece döndürülmüş küçük kare kuyruk.
+class _SpeechBubble extends StatelessWidget {
+  final String text;
+  const _SpeechBubble({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primaryDark,
+            ),
+          ),
+        ),
+        Transform.rotate(
+          angle: 0.785398,
+          child: Container(
+            width: 16,
+            height: 16,
+            decoration: const BoxDecoration(color: Colors.white),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -502,6 +599,14 @@ class AppWords {
     result.add(_hepsi.sublist(i, i + 5)); // son bölüm: 5 kelime (3+2 ekran)
     return result;
   }();
+
+  // Alıştırmalar modülü — kelimeden görsel yolu bulur.
+  static String? imageForWord(String word) {
+    for (final w in _hepsi) {
+      if (w['word'] == word) return w['image'];
+    }
+    return null;
+  }
 }
 
 // Bir listeyi 'size' büyüklüğünde parçalara böler (son parça küçük olabilir)
@@ -512,6 +617,211 @@ List<List<T>> chunkList<T>(List<T> list, int size) {
     result.add(list.sublist(i, end));
   }
   return result;
+}
+
+// ============================================================
+// MenuPage — karşılama ekranından sonraki ana hub. Üstte Veli
+// Paneli + Ayarlar, ortada "Bölümler"/"Alıştırmalar" YATAY
+// KAYDIRILABİLİR kartlar (buton değil, PageView).
+// ============================================================
+
+class _MenuCardData {
+  final String title;
+  final String subtitle;
+  final String lottieAsset;
+  final List<Color> colors;
+  final VoidCallback onTap;
+  const _MenuCardData({
+    required this.title,
+    required this.subtitle,
+    required this.lottieAsset,
+    required this.colors,
+    required this.onTap,
+  });
+}
+
+class MenuPage extends StatefulWidget {
+  const MenuPage({super.key});
+
+  @override
+  State<MenuPage> createState() => _MenuPageState();
+}
+
+class _MenuPageState extends State<MenuPage> {
+  final PageController _pageController = PageController(viewportFraction: 0.8);
+  int _current = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cards = <_MenuCardData>[
+      _MenuCardData(
+        title: 'Bölümler',
+        subtitle: 'Kelimeleri sırayla öğren',
+        lottieAsset: 'assets/lottie/cute_cat_works.lottie',
+        colors: const [AppColors.primary, AppColors.secondary],
+        onTap: () => Navigator.push(
+          context,
+          SlideFadeRoute(builder: (context) => const BolumSecPage()),
+        ),
+      ),
+      _MenuCardData(
+        title: 'Alıştırmalar',
+        subtitle: 'Zorlandığın kelimeleri tekrar et',
+        lottieAsset: 'assets/lottie/reading_cat.lottie',
+        colors: const [AppColors.secondary, AppColors.primary],
+        onTap: () => Navigator.push(
+          context,
+          SlideFadeRoute(builder: (context) => const AlistirmalarPage()),
+        ),
+      ),
+    ];
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        title: const Text('Menü'),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.insights, color: Colors.white),
+            tooltip: 'Veli / Terapist Paneli',
+            onPressed: () => Navigator.push(
+              context,
+              SlideFadeRoute(builder: (context) => const VeliPanelPage()),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            tooltip: 'Ayarlar',
+            onPressed: () => Navigator.push(
+              context,
+              SlideFadeRoute(builder: (context) => const SettingsPage()),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: SizedBox(
+                height: 460,
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: cards.length,
+                  onPageChanged: (i) => setState(() => _current = i),
+                  itemBuilder: (context, i) {
+                    final c = cards[i];
+                    return AnimatedScale(
+                      scale: i == _current ? 1.0 : 0.9,
+                      duration: const Duration(milliseconds: 200),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        child: Center(
+                          child: GestureDetector(
+                            onTap: c.onTap,
+                            child: Container(
+                              width: 280,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: c.colors,
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: c.colors.last.withValues(
+                                      alpha: 0.35,
+                                    ),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 190,
+                                    height: 190,
+                                    child: Lottie.asset(
+                                      c.lottieAsset,
+                                      repeat: true,
+                                      errorBuilder: (ctx, e, s) =>
+                                          const SizedBox.shrink(),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    c.title,
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                    ),
+                                    child: Text(
+                                      c.subtitle,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              cards.length,
+              (i) => AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: i == _current ? 22 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: i == _current
+                      ? AppColors.primary
+                      : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
 }
 
 // ============================================================
@@ -570,16 +880,6 @@ class _BolumSecPageState extends State<BolumSecPage> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.insights, color: Colors.white),
-            tooltip: 'Veli / Terapist Paneli',
-            onPressed: () {
-              Navigator.push(
-                context,
-                SlideFadeRoute(builder: (context) => const VeliPanelPage()),
-              );
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.emoji_events, color: Colors.white),
             tooltip: 'Rozetlerim',
             onPressed: () {
@@ -615,13 +915,24 @@ class _BolumSecPageState extends State<BolumSecPage> {
                     color: Colors.deepOrange,
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    streak == 1
-                        ? 'Bugün pratik yaptın, harika başlangıç!'
-                        : '$streak gün üst üste pratik yapıyorsun!',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      streak == 1
+                          ? 'Bugün pratik yaptın, harika başlangıç!'
+                          : '$streak gün üst üste pratik yapıyorsun!',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 46,
+                    height: 46,
+                    child: Lottie.asset(
+                      'assets/lottie/cat_rocket.lottie',
+                      repeat: true,
+                      errorBuilder: (c, e, s) => const SizedBox.shrink(),
                     ),
                   ),
                 ],
@@ -772,49 +1083,434 @@ class _VeliPanelPageState extends State<VeliPanelPage> {
                 ),
               ),
             )
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: stats!.length,
-              itemBuilder: (context, i) {
-                final s = stats![i];
-                final pct = (s.successRate * 100).round();
-                final zayif = s.successRate < 0.6;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: stats!.length,
+                    itemBuilder: (context, i) {
+                      final s = stats![i];
+                      final pct = (s.successRate * 100).round();
+                      final zayif = s.successRate < 0.6;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: zayif
+                                  ? Colors.red.shade100
+                                  : Colors.green.shade100,
+                              child: Icon(
+                                zayif ? Icons.priority_high : Icons.check,
+                                color: zayif ? Colors.red : Colors.green,
+                              ),
+                            ),
+                            title: Text(
+                              s.word.toUpperCase(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${s.attempts} deneme • Son sonuç: ${s.lastCorrect ? "doğru" : "yanlış"}',
+                            ),
+                            trailing: Text(
+                              '%$pct',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: zayif ? Colors.red : Colors.green,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (stats!.any((s) => s.successRate < 0.6))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: GradientButton(
+                      label: 'Zayıf Kelimeleri Alıştır',
+                      width: double.infinity,
+                      height: 60,
+                      fontSize: 18,
+                      onPressed: () {
+                        final weak = stats!
+                            .where((s) => s.successRate < 0.6)
+                            .toList();
+                        Navigator.push(
+                          context,
+                          SlideFadeRoute(
+                            builder: (context) =>
+                                AlistirmalarPage(weakWords: weak),
+                          ),
+                        );
+                      },
                     ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: zayif
-                            ? Colors.red.shade100
-                            : Colors.green.shade100,
-                        child: Icon(
-                          zayif ? Icons.priority_high : Icons.check,
-                          color: zayif ? Colors.red : Colors.green,
+                  ),
+              ],
+            ),
+    );
+  }
+}
+
+// ============================================================
+// AlistirmalarPage — zayıf kelimeleri tek tek tekrar ettirir.
+// Bölüm akışından bağımsız, sıra/yıldız kaydı yapmaz; her sonucu
+// WordHistoryService'e yazar (Veli Paneli otomatik güncellenir).
+// ============================================================
+
+class AlistirmalarPage extends StatefulWidget {
+  // null verilirse (ör. menüden doğrudan girildiğinde) zayıf kelimeler
+  // WordHistoryService'ten kendisi yüklenir — VeliPanelPage'e bağımlı değil.
+  final List<WordStat>? weakWords;
+  const AlistirmalarPage({super.key, this.weakWords});
+
+  @override
+  State<AlistirmalarPage> createState() => _AlistirmalarPageState();
+}
+
+class _AlistirmalarPageState extends State<AlistirmalarPage> {
+  List<Map<String, String>>? queue;
+  int index = 0;
+  bool isRecording = false;
+  double recordProgress = 0.0;
+  bool finished = false;
+  final List<Map<String, dynamic>> results = [];
+
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  final FlutterTts _tts = FlutterTts();
+  Timer? _timer;
+  StreamSubscription<Amplitude>? _ampSub;
+  double _maxAmplitude = -160.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQueue();
+    _initTts();
+  }
+
+  Future<void> _loadQueue() async {
+    List<WordStat> weak = widget.weakWords ?? [];
+    if (widget.weakWords == null) {
+      final stats = await WordHistoryService.aggregate();
+      weak = stats.where((s) => s.successRate < 0.6).toList();
+    }
+    if (!mounted) return;
+    setState(() {
+      queue = weak
+          .map(
+            (s) => {
+              'word': s.word,
+              'image': AppWords.imageForWord(s.word) ?? '',
+            },
+          )
+          .where((w) => w['image']!.isNotEmpty)
+          .toList();
+    });
+  }
+
+  Future<void> _initTts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ttsSpeed = prefs.getDouble('ttsSpeed') ?? 0.4;
+    final soundEnabled = prefs.getBool('soundEnabled') ?? true;
+    await _tts.setLanguage('tr-TR');
+    await _tts.setSpeechRate(soundEnabled ? ttsSpeed : 0.0);
+    await _tts.setVolume(soundEnabled ? 1.0 : 0.0);
+    await _tts.awaitSpeakCompletion(true);
+  }
+
+  Future<void> _onTap() async {
+    if (isRecording || finished || queue == null) return;
+    final word = queue![index]['word']!;
+    await _tts.speak(word);
+    if (!mounted) return;
+    await _startRecording(word);
+  }
+
+  Future<void> _startRecording(String word) async {
+    if (!await _audioRecorder.hasPermission()) return;
+
+    final dir = await getTemporaryDirectory();
+    final filePath =
+        '${dir.path}/alistir_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+    await _audioRecorder.start(
+      const RecordConfig(encoder: AudioEncoder.aacLc, sampleRate: 16000),
+      path: filePath,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      isRecording = true;
+      recordProgress = 0.0;
+    });
+
+    _maxAmplitude = -160.0;
+    _ampSub = _audioRecorder
+        .onAmplitudeChanged(const Duration(milliseconds: 100))
+        .listen((amp) {
+          if (amp.current > _maxAmplitude) _maxAmplitude = amp.current;
+        });
+
+    int ticks = 0;
+    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) async {
+      ticks++;
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() => recordProgress = ticks / 100.0);
+
+      if (ticks >= 100) {
+        timer.cancel();
+        final path = await _audioRecorder.stop();
+        await _ampSub?.cancel();
+        if (!mounted) return;
+        setState(() => isRecording = false);
+
+        final spoke = _maxAmplitude > kSilenceThresholdDb;
+
+        if (!spoke) {
+          // Çocuk konuşmadı — kayıt modele hiç gönderilmiyor, tekrar denesin.
+          await _tts.speak('Seni duyamadım, tekrar dener misin?');
+          return;
+        }
+
+        if (path != null) {
+          final result = await sendPronunciationToApi(path);
+          if (!mounted) return;
+          final isError = result['error'] == true;
+          final isPathological = !isError && result['is_pathological'] == true;
+          await WordHistoryService.recordResult(
+            word: word,
+            isPathological: isPathological,
+          );
+          results.add({
+            'word': word,
+            'correct': !isError && !isPathological,
+            'error': isError,
+          });
+        }
+
+        _advance();
+      }
+    });
+  }
+
+  void _advance() {
+    if (!mounted || queue == null) return;
+    if (index < queue!.length - 1) {
+      setState(() => index++);
+    } else {
+      setState(() => finished = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _ampSub?.cancel();
+    _audioRecorder.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (queue == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Alıştır'),
+          backgroundColor: AppColors.primary,
+          centerTitle: true,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (queue!.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Alıştır'),
+          backgroundColor: AppColors.primary,
+          centerTitle: true,
+        ),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Şu an alıştırılacak kelime yok — harika gidiyorsun!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (finished) return _buildSummary();
+
+    final w = queue![index];
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Alıştır'),
+        backgroundColor: AppColors.primary,
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Text(
+              '${index + 1} / ${queue!.length}',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Resme dokun ve kelimeyi tekrar oku!',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+            Expanded(
+              child: Center(
+                child: GestureDetector(
+                  onTap: _onTap,
+                  child: SizedBox(
+                    width: 220,
+                    height: 220,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset(w['image']!, fit: BoxFit.cover),
                         ),
+                        if (isRecording)
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.red, width: 4),
+                            ),
+                          ),
+                        if (isRecording)
+                          Center(
+                            child: SizedBox(
+                              width: 60,
+                              height: 60,
+                              child: CircularProgressIndicator(
+                                value: recordProgress,
+                                strokeWidth: 5,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  Colors.red,
+                                ),
+                                backgroundColor: Colors.white70,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              w['word']!.toUpperCase(),
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummary() {
+    final correctCount = results.where((r) => r['correct'] == true).length;
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Alıştırma Bitti'),
+        backgroundColor: AppColors.primary,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              '$correctCount / ${results.length} doğru!',
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: AppColors.secondary,
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: results.length,
+              itemBuilder: (context, i) {
+                final r = results[i];
+                final isError = r['error'] == true;
+                final correct = r['correct'] == true;
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: isError
+                          ? Colors.grey
+                          : (correct ? Colors.green : Colors.red),
+                      child: Icon(
+                        isError
+                            ? Icons.warning
+                            : (correct ? Icons.check : Icons.close),
+                        color: Colors.white,
                       ),
-                      title: Text(
-                        s.word.toUpperCase(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        '${s.attempts} deneme • Son sonuç: ${s.lastCorrect ? "doğru" : "yanlış"}',
-                      ),
-                      trailing: Text(
-                        '%$pct',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: zayif ? Colors.red : Colors.green,
-                        ),
-                      ),
+                    ),
+                    title: Text(
+                      (r['word'] as String).toUpperCase(),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      isError
+                          ? 'Analiz edilemedi'
+                          : (correct ? 'Bu sefer doğru!' : 'Hâlâ zorlanıyor'),
                     ),
                   ),
                 );
               },
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: GradientButton(
+              label: 'Tamam',
+              width: double.infinity,
+              height: 60,
+              fontSize: 22,
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1033,6 +1729,8 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   final AudioPlayer _audioPlayer = AudioPlayer();
   late ConfettiController _confettiController;
   Timer? _timer;
+  StreamSubscription<Amplitude>? _ampSub;
+  double _maxAmplitude = -160.0;
 
   late AnimationController _transitionController;
   Duration? _transitionDuration;
@@ -1137,6 +1835,13 @@ class _BolumPlayPageState extends State<BolumPlayPage>
       recordingGlobalIndex = globalIndex;
     });
 
+    _maxAmplitude = -160.0;
+    _ampSub = _audioRecorder
+        .onAmplitudeChanged(const Duration(milliseconds: 100))
+        .listen((amp) {
+          if (amp.current > _maxAmplitude) _maxAmplitude = amp.current;
+        });
+
     int ticks = 0;
     _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) async {
       ticks++;
@@ -1149,7 +1854,21 @@ class _BolumPlayPageState extends State<BolumPlayPage>
       if (ticks >= 100) {
         timer.cancel();
         final path = await _audioRecorder.stop();
+        await _ampSub?.cancel();
         if (!mounted) return;
+
+        final spoke = _maxAmplitude > kSilenceThresholdDb;
+
+        if (!spoke) {
+          // Çocuk konuşmadı — kayıt modele hiç gönderilmiyor, tekrar denesin.
+          setState(() {
+            isRecording = false;
+            recordProgress = 0.0;
+            recordingGlobalIndex = null;
+          });
+          await _tts.speak('Seni duyamadım, tekrar dener misin?');
+          return;
+        }
 
         setState(() {
           isRecording = false;
@@ -1175,29 +1894,10 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   // Ses dosyasını arka planda modele gönder (bekletmeden)
   // ------------------------------------------------------------
   void _uploadInBackground(int globalIndex, String path) {
-    final future = _sendToApi(path).then((result) {
+    final future = sendPronunciationToApi(path).then((result) {
       apiResults[globalIndex] = result;
     });
     pendingUploads.add(future);
-  }
-
-  Future<Map<String, dynamic>> _sendToApi(String filePath) async {
-    try {
-      final uri = Uri.parse(Config.apiUrl);
-      final request = http.MultipartRequest('POST', uri);
-      request.files.add(await http.MultipartFile.fromPath('file', filePath));
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      } else {
-        return {"error": true, "message": "API Hatası: ${response.statusCode}"};
-      }
-    } catch (e) {
-      return {"error": true, "message": "Bağlantı koptu!"};
-    }
   }
 
   void _checkTripletDone() {
@@ -1282,6 +1982,7 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   void dispose() {
     _timer?.cancel();
     _encourageDelayTimer?.cancel();
+    _ampSub?.cancel();
     _confettiController.dispose();
     _transitionController.dispose();
     _audioPlayer.dispose();
@@ -1564,13 +2265,24 @@ class _BolumPlayPageState extends State<BolumPlayPage>
         automaticallyImplyLeading: false,
       ),
       body: stillWaiting
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: AppColors.primary),
-                  SizedBox(height: 20),
-                  Text(
+                  SizedBox(
+                    width: 180,
+                    height: 180,
+                    child: Lottie.asset(
+                      'assets/lottie/cat_loader.lottie',
+                      repeat: true,
+                      errorBuilder: (c, e, s) =>
+                          const CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
                     'Sonuçlar hazırlanıyor...',
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),

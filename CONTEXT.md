@@ -170,3 +170,32 @@ Sırayla 4 madde uygulandı:
 ## 13. Emülatör Testi (2026-08-08)
 
 Uygulama emülatörden tamamen silinip (`adb uninstall`), sıfırdan derlenip (`flutter build apk --debug`) kuruldu ve gözle test edildi — sadece hot-reload değil, temiz kurulum. Font hatası (Bölüm 12, madde 1) bu testte bulundu ve düzeltildi. Diğer her şey (maskot, streak bandı, rozet/veli paneli ikonları, büyütülmüş köşe hayvanı, gradient buton) doğru çalışıyor. Kelime kartlarındaki (`kedi`, `top` vb.) yazı fontu Flutter'dan gelmiyor — `assets/3-4/*.png` gibi kelime görsellerinin içine baştan beri gömülü, bizim font/tema değişikliklerinden etkilenmiyor.
+
+## 14. Kedi Rehber Karakteri — Çoklu Lottie Entegrasyonu (2026-08-09, adım adım yapılıyor)
+
+Civan 5 yeni `.lottie` dosyası gönderdi: `waving_kitty`, `reading_cat`, `cat_rocket` (Cat in a rocket), `cat_loader` (Cat loader), `cute_cat_works` (Cute cat works) — hepsi `assets/lottie/` altına eklendi (dotLottie zip, geçerliliği doğrulandı).
+
+**Planlanan adımlar** (kullanıcı "adım adım gidelim" dedi, tek tek onaylanarak ilerleniyor):
+1. ✅ **Tamamlandı + test edildi**: `HomePage` artık bir karşılama ekranı — "Başla!" butonu tamamen kaldırıldı. `waving_kitty.lottie` oynuyor, üstünde basit bir konuşma balonu (`_SpeechBubble` widget'ı, beyaz kutu + döndürülmüş kare kuyruk) "Merhaba! Hazır mısın?" yazıyor. Animasyon bitince (ya da 4sn güvenlik zamanlayıcısı dolunca) `Navigator.pushReplacement` ile otomatik `MenuPage`'e geçiyor. Emülatörde doğrulandı.
+2. ✅ **Tamamlandı + test edildi**: Yeni `MenuPage` — üstte Veli Paneli + Ayarlar ikonları, ortada "Bölümler"/"Alıştırmalar" **yatay kaydırılabilir kartlar** (`PageView`, buton değil, sayfa göstergesi noktalarıyla). `BolumSecPage`'deki tekrarlanan Veli Paneli ikonu kaldırıldı. `AlistirmalarPage.weakWords` artık **opsiyonel** — `null` verilirse (menüden direkt girişte olduğu gibi) zayıf kelimeleri `WordHistoryService.aggregate()` ile kendisi yükler, VeliPanelPage'e bağımlı değil.
+3. ✅ **Tamamlandı + test edildi**: `cute_cat_works.lottie` → Bölümler kartının içinde (üstte, döngüsel oynuyor).
+4. ✅ **Tamamlandı + test edildi**: `reading_cat.lottie` → Alıştırmalar kartının içinde.
+   - **Kullanıcı revizyonu**: İlk halinde kartlar ekranı boydan boya kaplıyordu (sadece hafif kenar sızıntısı görünüyordu) — bu istenmedi. Kartlar **sabit boyuta** (`SizedBox(height: 460)`, kart genişliği 280) küçültülüp ekranın **dikey ortasına** (`Center`) alındı, artık gerçek bir "dikdörtgen kart" hissi veriyor, tüm ekranı kaplamıyor.
+5. ✅ **Tamamlandı + test edildi**: `cat_rocket.lottie` → BolumSecPage'deki streak bandının sağ ucunda (46×46, döngüsel).
+6. ✅ **Kod tamamlandı, flutter analyze temiz** (görsel test edilmedi — gerçek mikrofon kaydı + sunucu yanıtı gerektiriyor, adb ile hızlı simüle edilemedi): `cat_loader.lottie` → `BolumPlayPage._buildFinalView()`'daki "Sonuçlar hazırlanıyor..." bekleme ekranında (`stillWaiting` durumu), eski `CircularProgressIndicator`'ın yerine geçti. Diğer küçük/anlık yerel yüklemeler (VeliPanelPage, RozetlerPage — SharedPreferences'tan anında okunuyor) bilinçli olarak dokunulmadı, sade `CircularProgressIndicator` bırakıldı çünkü göz açıp kapayana kadar bitiyor, animasyon fark edilmeyecek kadar kısa sürüyor.
+
+**Tüm 6 adım tamamlandı.** Kedi rehber karakteri artık: açılışta karşılıyor, menüde iki kartın üstünde döngüsel oynuyor, streakte roketle uçuyor, analiz beklerken loading animasyonu oluyor.
+
+## 15. Sessizlik Algılama — Konuşmadıysa Modele Hiç Gitmesin (2026-08-09)
+
+Civan'ın isteği: çocuk konuşmazsa (mikrofon sessiz kalırsa) kayıt hiç modele gönderilmesin, "tamamlandı" sayılmasın, tekrar denemesi istensin.
+
+**Uygulama**: `record` paketinin `AudioRecorder.onAmplitudeChanged(Duration)` stream'i (dBFS `Amplitude.current`) 3 saniyelik kayıt boyunca dinleniyor, en yüksek değer (`_maxAmplitude`) tutuluyor. Kayıt bitince `kSilenceThresholdDb = -35.0` (üst seviyede `main.dart`'ta tanımlı sabit) ile karşılaştırılıyor:
+- Eşiği hiç geçmediyse (**konuşmadı**): `sendPronunciationToApi` / `WordHistoryService.recordResult` **hiç çağrılmıyor**, `completedTap[...]` `true` yapılmıyor (kart tekrar dokunulabilir kalıyor), TTS "Seni duyamadım, tekrar dener misin?" diyor.
+- Eşiği geçtiyse: eskisi gibi normal akış (modele gönder, tamamlandı işaretle, teşvik sesi).
+
+Hem `BolumPlayPage._startRecording` hem `AlistirmalarPage._startRecording`'e aynı mantık eklendi (`_ampSub` + `_maxAmplitude` alanları, `dispose()`'da iptal ediliyor).
+
+**Test**: Emülatörde mikrofona hiç ses vermeden bir kelimeye dokunuldu — kart tik/yeşil çerçeve almadı (tamamlanmadı), `adb logcat`'te `184.174.34.219` (model sunucusu) adresine **hiç istek gitmediği** doğrulandı.
+
+**Not**: `kSilenceThresholdDb = -35.0` değeri gerçek cihaz/ortam gürültüsüne göre ince ayar isteyebilir — emülatör mikrofonu tamamen sessiz olduğu için oradaki test "hiç konuşmama" senaryosunu doğruluyor, ama gerçek bir çocuğun düşük sesle konuşması durumunda eşiğin çok sıkı/gevşek olup olmadığı sahada görülmeli.
