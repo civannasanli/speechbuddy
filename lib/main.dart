@@ -8,7 +8,9 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -29,10 +31,41 @@ class Config {
   static const String apiUrl = "http://$apiIp/predict";
 }
 
-// Kayıt sırasında bu dBFS değerini hiç geçmezse "çocuk konuşmadı" kabul
-// edilir — kayıt modele hiç gönderilmez, tekrar denemesi istenir.
-// Not: mikrofon/ortam gürültüsüne göre ayar gerekebilir.
-const double kSilenceThresholdDb = -35.0;
+// ============================================================
+// Kayıt eşikleri
+//
+// Model 1–2 sn'lik tek kelime klipleriyle eğitildi. Sabit süreli kayıtta
+// kelimenin ardından uzun sessizlik kalıyor ve HuBERT çıktısı zaman
+// ekseninde ortalandığı için hedef sinyal seyreliyor. Bu yüzden kayıt
+// sabit süreyle değil, konuşma bitince sonlanır.
+// ============================================================
+
+/// Konuşmanın başladığını kabul ettiğimiz eşik (dBFS).
+const double kSpeechStartDb = -20.0;
+
+/// Konuşmanın bittiğini kabul ettiğimiz eşik. Başlangıçtan kasıtlı olarak
+/// daha düşük (histerezis) — kelime ortasındaki kısa duraklamada kesmesin.
+const double kSpeechEndDb = -38.0;
+
+/// Konuşma bittikten sonra kaydın devam edeceği süre.
+const Duration kTrailingSilence = Duration(milliseconds: 450);
+
+/// Hiç konuşma gelmezse bu süre sonunda vazgeç.
+const Duration kNoSpeechTimeout = Duration(milliseconds: 2500);
+
+/// Konuşma başladıktan sonraki tavan (uzun cümle / gürültü koruması).
+const Duration kMaxSpeechDuration = Duration(milliseconds: 2500);
+
+/// Bundan kısa "konuşma" tık sesi sayılır.
+const Duration kMinSpeechDuration = Duration(milliseconds: 250);
+
+/// UI ilerleme çubuğu tam ölçeği (kayıt genelde daha erken biter).
+const Duration kProgressFullScale = Duration(milliseconds: 3000);
+
+/// Modele gönderilen klibin iki yanına eklenen sessizlik (ms).
+/// Kayıt konuşma bölgesine kırpılır, sonra bu kadar sessizlik konur —
+/// böylece klip çocuğun tepki süresinden bağımsız, sabit biçimde olur.
+const int kClipPadMs = 150;
 
 // Ses dosyasını modele gönderir — hem BolumPlayPage hem AlistirmalarPage kullanır.
 Future<Map<String, dynamic>> sendPronunciationToApi(String filePath) async {
@@ -41,17 +74,406 @@ Future<Map<String, dynamic>> sendPronunciationToApi(String filePath) async {
     final request = http.MultipartRequest('POST', uri);
     request.files.add(await http.MultipartFile.fromPath('file', filePath));
 
-    final streamedResponse = await request.send();
+    final streamedResponse = await request.send().timeout(
+      const Duration(seconds: 15),
+    );
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
-    } else {
-      return {"error": true, "message": "API Hatası: ${response.statusCode}"};
     }
+    return {"error": true, "message": "API Hatası: ${response.statusCode}"};
+  } on TimeoutException {
+    return {"error": true, "message": "Sunucu yanıt vermedi"};
   } catch (e) {
     return {"error": true, "message": "Bağlantı koptu!"};
   }
+}
+
+// ============================================================
+// Akıllı kayıt: sesle sonlanan, değişken uzunluklu
+// ============================================================
+
+enum RecordOutcome {
+  ok, // konuşma yakalandı, dosya hazır
+  noSpeech, // hiç ses gelmedi
+  tooShort, // tık sesi / çok kısa
+  failed, // izin yok veya kayıt hatası
+}
+
+class SmartRecordResult {
+  final RecordOutcome outcome;
+  final String? path;
+  final int speechMs;
+  final int totalMs;
+
+  const SmartRecordResult(
+      this.outcome, {
+        this.path,
+        this.speechMs = 0,
+        this.totalMs = 0,
+      });
+
+  bool get isOk => outcome == RecordOutcome.ok && path != null;
+}
+
+/// WAV dosyasını konuşma bölgesine kırpar ve iki yana [padMs] sessizlik koyar.
+///
+/// Neden: model 1–2 sn'lik tek kelime klipleriyle eğitildi ve HuBERT çıktısı
+/// zaman ekseninde ortalanıyor. Çocuk geç başlarsa baştaki uzun sessizlik,
+/// erken keserse sondaki eksiklik embedding'i kaydırır. Bu fonksiyon klibi
+/// "250ms sessizlik + konuşma + 250ms sessizlik" biçimine sabitler, böylece
+/// modele giden girdi çocuğun tepki süresinden bağımsız hale gelir.
+///
+/// 16-bit PCM bekler; başka formatta dosyaya dokunmadan döner.
+Future<void> trimAndPadWav(
+    String path, {
+      required int speechStartMs,
+      required int speechEndMs,
+      int padMs = 250,
+    }) async {
+  try {
+    final file = File(path);
+    if (!await file.exists()) return;
+
+    final bytes = await file.readAsBytes();
+    if (bytes.length < 44) return;
+
+    String tag(int o) => String.fromCharCodes(bytes.sublist(o, o + 4));
+    if (tag(0) != 'RIFF' || tag(8) != 'WAVE') return;
+
+    final bd = ByteData.sublistView(bytes);
+
+    int pos = 12;
+    int sampleRate = 16000;
+    int channels = 1;
+    int bits = 16;
+    int dataOffset = -1;
+    int dataSize = 0;
+
+    while (pos + 8 <= bytes.length) {
+      final id = tag(pos);
+      final size = bd.getUint32(pos + 4, Endian.little);
+      final body = pos + 8;
+      if (id == 'fmt ' && body + 16 <= bytes.length) {
+        channels = bd.getUint16(body + 2, Endian.little);
+        sampleRate = bd.getUint32(body + 4, Endian.little);
+        bits = bd.getUint16(body + 14, Endian.little);
+      } else if (id == 'data') {
+        dataOffset = body;
+        dataSize = size;
+        break;
+      }
+      pos = body + size + (size.isOdd ? 1 : 0);
+    }
+
+    if (dataOffset < 0 || bits != 16 || channels < 1) return;
+
+    final frameBytes = channels * (bits ~/ 8);
+    final available = min(dataSize, bytes.length - dataOffset);
+    if (available <= 0) return;
+
+    int msToBytes(int ms) => ((ms * sampleRate) ~/ 1000) * frameBytes;
+
+    final wantStart = msToBytes(speechStartMs) - msToBytes(padMs);
+    final wantEnd = msToBytes(speechEndMs) + msToBytes(padMs);
+
+    // Dosyada olmayan kısımlar sessizlikle tamamlanır.
+    final headPad = wantStart < 0 ? -wantStart : 0;
+    final tailPad = wantEnd > available ? wantEnd - available : 0;
+
+    final cutStart = wantStart.clamp(0, available);
+    final cutEnd = wantEnd.clamp(cutStart, available);
+    if (cutEnd <= cutStart && headPad == 0 && tailPad == 0) return;
+
+    final core = bytes.sublist(dataOffset + cutStart, dataOffset + cutEnd);
+    final newDataSize = headPad + core.length + tailPad;
+
+    final header = Uint8List.fromList(bytes.sublist(0, dataOffset));
+    final hd = ByteData.sublistView(header);
+    hd.setUint32(4, dataOffset - 8 + newDataSize, Endian.little);
+    hd.setUint32(dataOffset - 4, newDataSize, Endian.little);
+
+    final out = BytesBuilder();
+    out.add(header);
+    if (headPad > 0) out.add(Uint8List(headPad));
+    out.add(core);
+    if (tailPad > 0) out.add(Uint8List(tailPad));
+
+    await file.writeAsBytes(out.takeBytes(), flush: true);
+  } catch (e) {
+    // Kırpma başarısızsa orijinal dosya bozulmadan kalır — gönderim sürer.
+    debugPrint('WAV kırpma atlandı: $e');
+  }
+}
+
+/// Çocuk konuşmayı bitirince duran kayıt.
+class SmartRecorder {
+  final AudioRecorder _recorder;
+
+  SmartRecorder(this._recorder);
+
+  StreamSubscription<Amplitude>? _sub;
+  Timer? _uiTimer;
+  Completer<SmartRecordResult>? _completer;
+  bool _closing = false;
+
+  /// Konuşmanın kayıt içindeki başlangıç/bitiş anları (ms).
+  /// Kaydı kırpıp iki yana sabit sessizlik koymak için kullanılır.
+  int? _speechStartMs;
+  int? _speechEndMs;
+
+  Future<SmartRecordResult> record({
+    required String path,
+    void Function(double progress)? onProgress,
+  }) async {
+    if (!await _recorder.hasPermission()) {
+      return const SmartRecordResult(RecordOutcome.failed);
+    }
+
+    try {
+      await _recorder.start(
+        const RecordConfig(
+          // WAV kayıpsız. AAC 4–8 kHz bandını buduyor, /s/ ve /ş/
+          // sürtünmelerinin enerjisi tam orada.
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
+        ),
+        path: path,
+      );
+    } catch (_) {
+      return const SmartRecordResult(RecordOutcome.failed);
+    }
+
+    _closing = false;
+    final completer = Completer<SmartRecordResult>();
+    _completer = completer;
+
+    final startedAt = DateTime.now();
+    DateTime? speechStart;
+    DateTime? lastVoiced;
+    int frame = 0;
+    _speechStartMs = null;
+    _speechEndMs = null;
+
+    if (onProgress != null) {
+      _uiTimer = Timer.periodic(const Duration(milliseconds: 30), (_) {
+        final elapsed = DateTime.now().difference(startedAt).inMilliseconds;
+        onProgress(
+          (elapsed / kProgressFullScale.inMilliseconds).clamp(0.0, 1.0),
+        );
+      });
+    }
+
+    _sub = _recorder
+        .onAmplitudeChanged(const Duration(milliseconds: 100))
+        .listen((amp) {
+      // İlk frame mikrofon açılış patlaması — yoksay.
+      frame++;
+      if (frame <= 1) return;
+      if (_closing) return;
+
+      final now = DateTime.now();
+      final db = amp.current;
+
+      // Faz 1: konuşmanın başlamasını bekle
+      if (speechStart == null) {
+        if (db > kSpeechStartDb) {
+          speechStart = now;
+          lastVoiced = now;
+          _speechStartMs = now.difference(startedAt).inMilliseconds;
+        } else if (now.difference(startedAt) > kNoSpeechTimeout) {
+          _finish(RecordOutcome.noSpeech, startedAt, null);
+        }
+        return;
+      }
+
+      // Faz 2: konuşmanın bitmesini bekle
+      if (db > kSpeechEndDb) {
+        lastVoiced = now;
+        _speechEndMs = now.difference(startedAt).inMilliseconds;
+      }
+
+      final speechMs = now.difference(speechStart!).inMilliseconds;
+      final silentFor = now.difference(lastVoiced!);
+
+      if (silentFor >= kTrailingSilence) {
+        _finish(
+          speechMs < kMinSpeechDuration.inMilliseconds
+              ? RecordOutcome.tooShort
+              : RecordOutcome.ok,
+          startedAt,
+          speechStart,
+        );
+      } else if (speechMs >= kMaxSpeechDuration.inMilliseconds) {
+        _finish(RecordOutcome.ok, startedAt, speechStart);
+      }
+    });
+
+    return completer.future;
+  }
+
+  Future<void> _finish(
+      RecordOutcome outcome,
+      DateTime startedAt,
+      DateTime? speechStart,
+      ) async {
+    if (_closing) return;
+    _closing = true;
+
+    _uiTimer?.cancel();
+    _uiTimer = null;
+    await _sub?.cancel();
+    _sub = null;
+
+    String? path;
+    try {
+      path = await _recorder.stop();
+    } catch (_) {
+      path = null;
+    }
+
+    // Konuşma yakalandıysa klibi normalize et:
+    // 250ms sessizlik + konuşma + 250ms sessizlik.
+    if (path != null &&
+        outcome == RecordOutcome.ok &&
+        _speechStartMs != null &&
+        _speechEndMs != null) {
+      await trimAndPadWav(
+        path,
+        speechStartMs: _speechStartMs!,
+        speechEndMs: _speechEndMs!,
+        padMs: kClipPadMs,
+      );
+    }
+
+    final now = DateTime.now();
+    final result = SmartRecordResult(
+      path == null ? RecordOutcome.failed : outcome,
+      path: path,
+      speechMs: speechStart == null
+          ? 0
+          : now.difference(speechStart).inMilliseconds,
+      totalMs: now.difference(startedAt).inMilliseconds,
+    );
+
+    if (_completer != null && !_completer!.isCompleted) {
+      _completer!.complete(result);
+    }
+    _completer = null;
+  }
+
+  Future<void> cancel() async {
+    if (_closing) return;
+    _closing = true;
+    _uiTimer?.cancel();
+    await _sub?.cancel();
+    try {
+      await _recorder.stop();
+    } catch (_) {}
+    if (_completer != null && !_completer!.isCompleted) {
+      _completer!.complete(const SmartRecordResult(RecordOutcome.failed));
+    }
+    _completer = null;
+  }
+
+  void dispose() {
+    _uiTimer?.cancel();
+    _sub?.cancel();
+  }
+}
+
+// ============================================================
+// Ses efektleri
+//
+// pubspec.yaml -> flutter -> assets altına `assets/sesler/` ekli olmalı.
+// Gerekli dosyalar:
+//   assets/sesler/yildiz.wav   kelime kaydedilince (kısa "ding")
+//   assets/sesler/alkis.wav    3'lü bitince
+//   assets/sesler/bitti.wav    bölüm sonu fanfar
+//   assets/sesler/tekrar.wav   ses yakalanamadı — NÖTR olmalı
+//
+// Ses çalmıyorsa sırayla kontrol et:
+//   1. pubspec.yaml -> flutter: -> assets: altında `- assets/sesler/` var mı
+//   2. Dosya adları birebir aynı mı (büyük/küçük harf dahil)
+//   3. `flutter clean && flutter pub get` — asset manifest bayatlar
+//   4. Konsolda "SFX çalınamadı" satırı sebebi yazar
+//
+// Ücretsiz kaynak: mixkit.co/free-sound-effects/game/ ya da freesound.org
+// Arama: "success chime", "level complete", "sparkle".
+//
+// DİKKAT — tekrar.wav için hata/buzzer sesi KULLANMA. Bu tetikleyici
+// telaffuzun yanlış olmasıyla değil, mikrofonun sesi yakalayamamasıyla
+// ilgili. Sert bir "yanlış" sesi duyan çocuk telaffuzunun kötü olduğunu
+// sanar. Nötr seç: yumuşak "pop", hafif zil, iki notalık kısa motif.
+// Arama: "soft pop", "gentle notification", "bubble".
+// ============================================================
+
+class Sfx {
+  static const String wordDone = 'sesler/yildiz.wav';
+  static const String tripletDone = 'sesler/alkis.wav';
+  static const String sectionDone = 'sesler/bitti.wav';
+  static const String tekrar = 'sesler/tekrar.wav';
+
+  /// Efektler kısa ve üst üste binebiliyor; havuzdan boş player alınır.
+  /// Tek player paylaşılırsa yeni efekt öncekini kesiyor.
+  static final List<AudioPlayer> _pool = [];
+  static const int _poolSize = 4;
+  static int _next = 0;
+
+  static AudioPlayer _take() {
+    if (_pool.length < _poolSize) {
+      final p = AudioPlayer();
+      // Efekt sesi zil/alarm kanalına düşmesin, medya olarak çalsın.
+      p.setReleaseMode(ReleaseMode.stop);
+      _pool.add(p);
+      return p;
+    }
+    final p = _pool[_next % _poolSize];
+    _next++;
+    return p;
+  }
+
+  static Future<void> play(String asset, {double volume = 0.9}) async {
+    try {
+      final player = _take();
+      await player.stop();
+      await player.setVolume(volume);
+      await player.play(AssetSource(asset));
+    } catch (e) {
+      // Sessizce yut ama sebebi logla — dosya adı/pubspec hatalarını
+      // görmeden "ses çalmıyor" diye uğraşmak zaman kaybı.
+      debugPrint('SFX çalınamadı ($asset): $e');
+    }
+  }
+
+  static Future<void> disposeAll() async {
+    for (final p in _pool) {
+      await p.dispose();
+    }
+    _pool.clear();
+  }
+}
+
+/// Kayıt tamamlandı onayı — çubuğun yerini alır.
+Widget _doneTick(double size) {
+  return TweenAnimationBuilder<double>(
+    tween: Tween(begin: 0.6, end: 1.0),
+    duration: const Duration(milliseconds: 220),
+    curve: Curves.easeOutBack,
+    builder: (context, scale, child) =>
+        Transform.scale(scale: scale, child: child),
+    child: Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        color: Colors.green,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.check_rounded, color: Colors.white, size: size * 0.62),
+    ),
+  );
 }
 
 // ============================================================
@@ -90,9 +512,29 @@ class CornerAnimals {
     'assets/hayvanlar/tavsan2.png',
   ];
 
+  /// Mola ekranında "Yeni arkadaş: ..." yazısı için görünen adlar.
+  static const Map<String, String> adlar = {
+    'assets/hayvanlar/fil.png': 'Fil',
+    'assets/hayvanlar/maymun.png': 'Maymun',
+    'assets/hayvanlar/rakun.png': 'Rakun',
+    'assets/hayvanlar/ayi.png': 'Ayı',
+    'assets/hayvanlar/tavsan.png': 'Tavşan',
+    'assets/hayvanlar/fil2.png': 'Fil',
+    'assets/hayvanlar/ayi2.png': 'Ayı',
+    'assets/hayvanlar/kopek.png': 'Köpek',
+    'assets/hayvanlar/civciv.png': 'Civciv',
+    'assets/hayvanlar/tavsan2.png': 'Tavşan',
+  };
+
   static final Random _random = Random();
 
   static String pickRandom() => assets[_random.nextInt(assets.length)];
+
+  /// Mola ödülü: henüz kazanılmamış ilk hayvan; hepsi kazanıldıysa rastgele.
+  static String pickReward(Set<String> kazanilanlar) => assets.firstWhere(
+        (a) => !kazanilanlar.contains(a),
+    orElse: pickRandom,
+  );
 }
 
 // ============================================================
@@ -341,29 +783,29 @@ class _PopStarState extends State<PopStar> {
 
 class SlideFadeRoute<T> extends PageRouteBuilder<T> {
   SlideFadeRoute({required WidgetBuilder builder})
-    : super(
-        transitionDuration: const Duration(milliseconds: 320),
-        reverseTransitionDuration: const Duration(milliseconds: 260),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            builder(context),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final curved = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-            reverseCurve: Curves.easeInCubic,
-          );
-          return FadeTransition(
-            opacity: curved,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.06),
-                end: Offset.zero,
-              ).animate(curved),
-              child: child,
-            ),
-          );
-        },
+      : super(
+    transitionDuration: const Duration(milliseconds: 320),
+    reverseTransitionDuration: const Duration(milliseconds: 260),
+    pageBuilder: (context, animation, secondaryAnimation) =>
+        builder(context),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
       );
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.06),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
 }
 
 // ============================================================
@@ -529,80 +971,57 @@ class _SpeechBubble extends StatelessWidget {
 
 // ============================================================
 // Veri: AppWords
-// 50 kelime, 6 bölüme bölünmüş (5x9 + 1x5).
-// Eski dosya yollarıyla (yaş klasörleri) birebir aynı, sadece gruplama değişti.
+// Değerlendirme modülü — 24 kelime, DİLART görsel setinin sırasıyla.
+// Bölüm YOK: tek kesintisiz akış. Kutlama durakları etaplar[] ile
+// belirleniyor; etaplar toplamı hepsi.length'e eşit olmalı.
 // ============================================================
 
 class AppWords {
-  // Tüm 50 kelime, orijinal sıradaki hali (3-4 -> 4-5 -> 5-6 yaş verisi birleştirildi)
-  static const List<Map<String, String>> _hepsi = [
-    {'image': 'assets/3-4/kedi.png', 'word': 'kedi'},
-    {'image': 'assets/3-4/top.png', 'word': 'top'},
-    {'image': 'assets/3-4/anahtar.png', 'word': 'anahtar'},
-    {'image': 'assets/3-4/güneş.png', 'word': 'güneş'},
-    {'image': 'assets/3-4/limon.png', 'word': 'limon'},
-    {'image': 'assets/3-4/bardak.png', 'word': 'bardak'},
-    {'image': 'assets/3-4/nine.png', 'word': 'nine'},
-    {'image': 'assets/3-4/elma.png', 'word': 'elma'},
-    {'image': 'assets/3-4/yılan.png', 'word': 'yılan'},
-    {'image': 'assets/3-4/havuç.png', 'word': 'havuç'},
-    {'image': 'assets/3-4/dede.png', 'word': 'dede'},
-    {'image': 'assets/3-4/toka.png', 'word': 'toka'},
-    {'image': 'assets/3-4/masa.png', 'word': 'masa'},
-    {'image': 'assets/3-4/balık.png', 'word': 'balık'},
-    {'image': 'assets/3-4/peynir.png', 'word': 'peynir'},
-    {'image': 'assets/3-4/gaga.png', 'word': 'gaga'},
-    {'image': 'assets/3-4/kulak.png', 'word': 'kulak'},
-    {'image': 'assets/3-4/bebek.png', 'word': 'bebek'},
-    {'image': 'assets/3-4/nar.png', 'word': 'nar'},
-    {'image': 'assets/3-4/ayakkabı.png', 'word': 'ayakkabı'},
-    {'image': 'assets/3-4/dis.png', 'word': 'diş'},
-    {'image': 'assets/3-4/dondurma.png', 'word': 'dondurma'},
-    {'image': 'assets/3-4/yatak.png', 'word': 'yatak'},
-    {'image': 'assets/3-4/bayrak.png', 'word': 'bayrak'},
-    {'image': 'assets/4-5/ruj.png', 'word': 'ruj'},
-    {'image': 'assets/4-5/bisiklet.png', 'word': 'bisiklet'},
-    {'image': 'assets/4-5/tavsan.png', 'word': 'tavşan'},
-    {'image': 'assets/4-5/oje.png', 'word': 'oje'},
-    {'image': 'assets/4-5/defter.png', 'word': 'defter'},
-    {'image': 'assets/4-5/zil.png', 'word': 'zil'},
-    {'image': 'assets/4-5/cep.png', 'word': 'cep'},
-    {'image': 'assets/4-5/sabun.png', 'word': 'sabun'},
-    {'image': 'assets/4-5/kasik.png', 'word': 'kaşık'},
-    {'image': 'assets/4-5/vazo.png', 'word': 'vazo'},
-    {'image': 'assets/4-5/cicek.png', 'word': 'çiçek'},
-    {'image': 'assets/4-5/jilet.png', 'word': 'jilet'},
-    {'image': 'assets/4-5/cocuk.png', 'word': 'çocuk'},
-    {'image': 'assets/4-5/salıncak.png', 'word': 'salıncak'},
-    {'image': 'assets/4-5/fare.png', 'word': 'fare'},
-    {'image': 'assets/4-5/uzum.png', 'word': 'üzüm'},
-    {'image': 'assets/4-5/sapka.png', 'word': 'şapka'},
-    {'image': 'assets/4-5/fırca.png', 'word': 'fırça'},
-    {'image': 'assets/4-5/telefon.png', 'word': 'telefon'},
-    {'image': 'assets/5-6/park.png', 'word': 'park'},
-    {'image': 'assets/5-6/tarak.png', 'word': 'tarak'},
-    {'image': 'assets/5-6/agac.png', 'word': 'ağaç'},
-    {'image': 'assets/5-6/resim.png', 'word': 'resim'},
-    {'image': 'assets/5-6/ari.png', 'word': 'arı'},
-    {'image': 'assets/5-6/dügme.png', 'word': 'düğme'},
-    {'image': 'assets/5-6/araba.png', 'word': 'araba'},
+  static const List<Map<String, String>> hepsi = [
+    {'image': 'assets/dilart/peynir.png', 'word': 'peynir'},
+    {'image': 'assets/dilart/elma.png', 'word': 'elma'},
+    {'image': 'assets/dilart/bardak.png', 'word': 'bardak'},
+    {'image': 'assets/dilart/yatak.png', 'word': 'yatak'},
+    {'image': 'assets/dilart/dondurma.png', 'word': 'dondurma'},
+    {'image': 'assets/dilart/ayakkabi.png', 'word': 'ayakkabı'},
+    {'image': 'assets/dilart/bayrak.png', 'word': 'bayrak'},
+    {'image': 'assets/dilart/gunes.png', 'word': 'güneş'},
+    {'image': 'assets/dilart/havuc.png', 'word': 'havuç'},
+    {'image': 'assets/dilart/anahtar.png', 'word': 'anahtar'},
+    {'image': 'assets/dilart/limon.png', 'word': 'limon'},
+    {'image': 'assets/dilart/bisiklet.png', 'word': 'bisiklet'},
+    {'image': 'assets/dilart/sabun.png', 'word': 'sabun'},
+    {'image': 'assets/dilart/uzum.png', 'word': 'üzüm'},
+    {'image': 'assets/dilart/sapka.png', 'word': 'şapka'},
+    {'image': 'assets/dilart/kasik.png', 'word': 'kaşık'},
+    {'image': 'assets/dilart/cocuk.png', 'word': 'çocuk'},
+    {'image': 'assets/dilart/yilan.png', 'word': 'yılan'},
+    {'image': 'assets/dilart/salincak.png', 'word': 'salıncak'},
+    {'image': 'assets/dilart/vazo.png', 'word': 'vazo'},
+    {'image': 'assets/dilart/firca.png', 'word': 'fırça'},
+    {'image': 'assets/dilart/telefon.png', 'word': 'telefon'},
+    {'image': 'assets/dilart/jilet.png', 'word': 'jilet'},
+    {'image': 'assets/dilart/ruj.png', 'word': 'ruj'},
   ];
 
-  // 5 bölüm 9'ar kelime + son bölüm 5 kelime = 50
-  static final List<List<Map<String, String>>> bolumler = () {
-    final List<List<Map<String, String>>> result = [];
-    int i = 0;
-    for (int b = 0; b < 5; b++) {
-      result.add(_hepsi.sublist(i, i + 9));
-      i += 9;
+  /// Kutlama duraklarının uzunlukları: 9 + 9 + 6 = 24.
+  static const List<int> etaplar = [9, 9, 6];
+
+  /// Kutlama ekranının çıkacağı kümülatif kelime sayıları: {9, 18}.
+  /// Son etabın bitişinde kutlama değil, bitiş ekranı gelir.
+  static final Set<int> molaNoktalari = () {
+    final noktalar = <int>{};
+    int toplam = 0;
+    for (int i = 0; i < etaplar.length - 1; i++) {
+      toplam += etaplar[i];
+      noktalar.add(toplam);
     }
-    result.add(_hepsi.sublist(i, i + 5)); // son bölüm: 5 kelime (3+2 ekran)
-    return result;
+    return noktalar;
   }();
 
-  // Alıştırmalar modülü — kelimeden görsel yolu bulur.
+  /// Alıştırmalar modülü — kelimeden görsel yolu bulur.
   static String? imageForWord(String word) {
-    for (final w in _hepsi) {
+    for (final w in hepsi) {
       if (w['word'] == word) return w['image'];
     }
     return null;
@@ -651,6 +1070,32 @@ class _MenuPageState extends State<MenuPage> {
   final PageController _pageController = PageController(viewportFraction: 0.8);
   int _current = 0;
 
+  /// Rozetler ekranı için: seri, akıştaki ilerleme ve sonuç.
+  int _streak = 0;
+  int _ilerleme = 0;
+  int _yildiz = 0;
+  bool _tamamlandi = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDurum();
+  }
+
+  /// Gün serisi eskiden bölüm listesi açılırken sayılıyordu; bölüm listesi
+  /// kalktığı için artık menü açılışında sayılıyor.
+  Future<void> _loadDurum() async {
+    final prefs = await SharedPreferences.getInstance();
+    final streak = await StreakService.touchAndGetStreak();
+    if (!mounted) return;
+    setState(() {
+      _streak = streak;
+      _ilerleme = prefs.getInt('akis_tamamlanan') ?? 0;
+      _yildiz = prefs.getInt('akis_yildiz') ?? 0;
+      _tamamlandi = prefs.getBool('akis_tamamlandi') ?? false;
+    });
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -661,14 +1106,16 @@ class _MenuPageState extends State<MenuPage> {
   Widget build(BuildContext context) {
     final cards = <_MenuCardData>[
       _MenuCardData(
-        title: 'Bölümler',
-        subtitle: 'Kelimeleri sırayla öğren',
+        title: 'Kelimeler',
+        subtitle: _ilerleme > 0 && !_tamamlandi
+            ? '${_ilerleme + 1}. kelimeden devam et'
+            : '${AppWords.hepsi.length} kelime, tek seferde',
         lottieAsset: 'assets/lottie/cute_cat_works.lottie',
         colors: const [AppColors.primary, AppColors.secondary],
         onTap: () => Navigator.push(
           context,
-          SlideFadeRoute(builder: (context) => const BolumSecPage()),
-        ),
+          SlideFadeRoute(builder: (context) => const BolumPlayPage()),
+        ).then((_) => _loadDurum()),
       ),
       _MenuCardData(
         title: 'Alıştırmalar',
@@ -690,6 +1137,21 @@ class _MenuPageState extends State<MenuPage> {
         centerTitle: true,
         automaticallyImplyLeading: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.emoji_events, color: Colors.white),
+            tooltip: 'Rozetlerim',
+            onPressed: () => Navigator.push(
+              context,
+              SlideFadeRoute(
+                builder: (context) => RozetlerPage(
+                  ilerleme: _ilerleme,
+                  yildiz: _yildiz,
+                  tamamlandi: _tamamlandi,
+                  streak: _streak,
+                ),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.insights, color: Colors.white),
             tooltip: 'Veli / Terapist Paneli',
@@ -760,7 +1222,7 @@ class _MenuPageState extends State<MenuPage> {
                                       c.lottieAsset,
                                       repeat: true,
                                       errorBuilder: (ctx, e, s) =>
-                                          const SizedBox.shrink(),
+                                      const SizedBox.shrink(),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -803,7 +1265,7 @@ class _MenuPageState extends State<MenuPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
               cards.length,
-              (i) => AnimatedContainer(
+                  (i) => AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 width: i == _current ? 22 : 8,
@@ -818,216 +1280,6 @@ class _MenuPageState extends State<MenuPage> {
             ),
           ),
           const SizedBox(height: 30),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================
-// BolumSecPage — bölüm listesi (yaş seçimi YOK, direkt bölümler)
-// ============================================================
-
-class BolumSecPage extends StatefulWidget {
-  const BolumSecPage({super.key});
-
-  @override
-  State<BolumSecPage> createState() => _BolumSecPageState();
-}
-
-class _BolumSecPageState extends State<BolumSecPage> {
-  List<int> bolumStars = [];
-  List<bool> bolumCompleted = [];
-  int streak = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final count = AppWords.bolumler.length;
-
-    List<int> stars = [];
-    List<bool> completed = [];
-    for (int i = 0; i < count; i++) {
-      stars.add(prefs.getInt('bolum${i}_stars') ?? 0);
-      completed.add(prefs.getBool('bolum${i}_completed') ?? false);
-    }
-    final currentStreak = await StreakService.touchAndGetStreak();
-
-    setState(() {
-      bolumStars = stars;
-      bolumCompleted = completed;
-      streak = currentStreak;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final count = AppWords.bolumler.length;
-    if (bolumStars.length != count) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Bölümler'),
-        backgroundColor: AppColors.primary,
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.emoji_events, color: Colors.white),
-            tooltip: 'Rozetlerim',
-            onPressed: () {
-              Navigator.push(
-                context,
-                SlideFadeRoute(
-                  builder: (context) => RozetlerPage(
-                    bolumStars: bolumStars,
-                    bolumCompleted: bolumCompleted,
-                    streak: streak,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (streak > 0)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.local_fire_department,
-                    color: Colors.deepOrange,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      streak == 1
-                          ? 'Bugün pratik yaptın, harika başlangıç!'
-                          : '$streak gün üst üste pratik yapıyorsun!',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 46,
-                    height: 46,
-                    child: Lottie.asset(
-                      'assets/lottie/cat_rocket.lottie',
-                      repeat: true,
-                      errorBuilder: (c, e, s) => const SizedBox.shrink(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: count,
-              itemBuilder: (context, i) {
-                final isLocked = i > 0 && !bolumCompleted[i - 1];
-                final wordCount = AppWords.bolumler[i].length;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: isLocked
-                          ? null
-                          : () {
-                              Navigator.push(
-                                context,
-                                SlideFadeRoute(
-                                  builder: (context) =>
-                                      BolumPlayPage(bolumIndex: i),
-                                ),
-                              ).then((_) => _loadData());
-                            },
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color: isLocked
-                                    ? Colors.grey.shade300
-                                    : AppColors.surfaceLight,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                isLocked ? Icons.lock : Icons.play_arrow,
-                                color: isLocked
-                                    ? Colors.grey
-                                    : AppColors.primary,
-                                size: 28,
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Bölüm ${i + 1}',
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  '$wordCount kelime',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Spacer(),
-                            Row(
-                              children: List.generate(
-                                3,
-                                (s) => PopStar(
-                                  filled: s < bolumStars[i],
-                                  delay: Duration(
-                                    milliseconds: 100 * s + 60 * i,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
         ],
       ),
     );
@@ -1070,92 +1322,92 @@ class _VeliPanelPageState extends State<VeliPanelPage> {
       ),
       body: stats == null
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
+        child: CircularProgressIndicator(color: AppColors.primary),
+      )
           : stats!.isEmpty
           ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Henüz bir bölüm tamamlanmadı — çocuğun ilk pratiğinden sonra kelime bazlı sonuçlar burada birikecek.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ),
-            )
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'Henüz bir bölüm tamamlanmadı — çocuğun ilk pratiğinden sonra kelime bazlı sonuçlar burada birikecek.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ),
+      )
           : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: stats!.length,
-                    itemBuilder: (context, i) {
-                      final s = stats![i];
-                      final pct = (s.successRate * 100).round();
-                      final zayif = s.successRate < 0.6;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: zayif
-                                  ? Colors.red.shade100
-                                  : Colors.green.shade100,
-                              child: Icon(
-                                zayif ? Icons.priority_high : Icons.check,
-                                color: zayif ? Colors.red : Colors.green,
-                              ),
-                            ),
-                            title: Text(
-                              s.word.toUpperCase(),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              '${s.attempts} deneme • Son sonuç: ${s.lastCorrect ? "doğru" : "yanlış"}',
-                            ),
-                            trailing: Text(
-                              '%$pct',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: zayif ? Colors.red : Colors.green,
-                              ),
-                            ),
-                          ),
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: stats!.length,
+              itemBuilder: (context, i) {
+                final s = stats![i];
+                final pct = (s.successRate * 100).round();
+                final zayif = s.successRate < 0.6;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: zayif
+                            ? Colors.red.shade100
+                            : Colors.green.shade100,
+                        child: Icon(
+                          zayif ? Icons.priority_high : Icons.check,
+                          color: zayif ? Colors.red : Colors.green,
                         ),
-                      );
-                    },
-                  ),
-                ),
-                if (stats!.any((s) => s.successRate < 0.6))
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: GradientButton(
-                      label: 'Zayıf Kelimeleri Alıştır',
-                      width: double.infinity,
-                      height: 60,
-                      fontSize: 18,
-                      onPressed: () {
-                        final weak = stats!
-                            .where((s) => s.successRate < 0.6)
-                            .toList();
-                        Navigator.push(
-                          context,
-                          SlideFadeRoute(
-                            builder: (context) =>
-                                AlistirmalarPage(weakWords: weak),
-                          ),
-                        );
-                      },
+                      ),
+                      title: Text(
+                        s.word.toUpperCase(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${s.attempts} deneme • Son sonuç: ${s.lastCorrect ? "doğru" : "yanlış"}',
+                      ),
+                      trailing: Text(
+                        '%$pct',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: zayif ? Colors.red : Colors.green,
+                        ),
+                      ),
                     ),
                   ),
-              ],
+                );
+              },
             ),
+          ),
+          if (stats!.any((s) => s.successRate < 0.6))
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: GradientButton(
+                label: 'Zayıf Kelimeleri Alıştır',
+                width: double.infinity,
+                height: 60,
+                fontSize: 18,
+                onPressed: () {
+                  final weak = stats!
+                      .where((s) => s.successRate < 0.6)
+                      .toList();
+                  Navigator.push(
+                    context,
+                    SlideFadeRoute(
+                      builder: (context) =>
+                          AlistirmalarPage(weakWords: weak),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -1186,9 +1438,22 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
 
   final AudioRecorder _audioRecorder = AudioRecorder();
   final FlutterTts _tts = FlutterTts();
-  Timer? _timer;
-  StreamSubscription<Amplitude>? _ampSub;
-  double _maxAmplitude = -160.0;
+  late final SmartRecorder _smart = SmartRecorder(_audioRecorder);
+
+  /// Gönderimi beklemeden ilerliyoruz; bekleyenler burada toplanır.
+  final List<Future<void>> _pending = [];
+
+  bool showRetryHint = false;
+  Timer? _retryHintTimer;
+
+  /// Kayıt başarıyla bitince çubuk yerine kısa süre yeşil tik gösterilir.
+  bool showDoneTick = false;
+  Timer? _doneTickTimer;
+
+  /// Ölçüm: istek süreleri ve özet ekranındaki bekleme.
+  final List<int> _uploadMs = [];
+  int? _finalWaitMs;
+  DateTime? _finalWaitStart;
 
   @override
   void initState() {
@@ -1208,10 +1473,10 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
       queue = weak
           .map(
             (s) => {
-              'word': s.word,
-              'image': AppWords.imageForWord(s.word) ?? '',
-            },
-          )
+          'word': s.word,
+          'image': AppWords.imageForWord(s.word) ?? '',
+        },
+      )
           .where((w) => w['image']!.isNotEmpty)
           .toList();
     });
@@ -1236,72 +1501,107 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
   }
 
   Future<void> _startRecording(String word) async {
-    if (!await _audioRecorder.hasPermission()) return;
-
     final dir = await getTemporaryDirectory();
     final filePath =
-        '${dir.path}/alistir_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        '${dir.path}/alistir_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-    await _audioRecorder.start(
-      const RecordConfig(encoder: AudioEncoder.aacLc, sampleRate: 16000),
-      path: filePath,
-    );
-
-    if (!mounted) return;
     setState(() {
       isRecording = true;
       recordProgress = 0.0;
     });
 
-    _maxAmplitude = -160.0;
-    _ampSub = _audioRecorder
-        .onAmplitudeChanged(const Duration(milliseconds: 100))
-        .listen((amp) {
-          if (amp.current > _maxAmplitude) _maxAmplitude = amp.current;
+    final rec = await _smart.record(
+      path: filePath,
+      onProgress: (p) {
+        if (mounted) setState(() => recordProgress = p);
+      },
+    );
+
+    if (!mounted) return;
+
+    if (!rec.isOk) {
+      setState(() {
+        isRecording = false;
+        recordProgress = 0.0;
+      });
+      if (rec.outcome == RecordOutcome.noSpeech ||
+          rec.outcome == RecordOutcome.tooShort) {
+        _showRetry();
+      }
+      return;
+    }
+
+    // Çubuk yerine yeşil tik — kırmızı çerçeve kalkmadan önce
+    // kısa bir onay anı, çocuk kaydın alındığını görsün.
+    setState(() {
+      recordProgress = 1.0;
+      showDoneTick = true;
+    });
+    _doneTickTimer?.cancel();
+    _doneTickTimer = Timer(const Duration(milliseconds: 550), () {
+      if (mounted) {
+        setState(() {
+          showDoneTick = false;
+          isRecording = false;
+          recordProgress = 0.0;
         });
-
-    int ticks = 0;
-    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) async {
-      ticks++;
-      if (!mounted) {
-        timer.cancel();
-        return;
       }
-      setState(() => recordProgress = ticks / 100.0);
+    });
 
-      if (ticks >= 100) {
-        timer.cancel();
-        final path = await _audioRecorder.stop();
-        await _ampSub?.cancel();
-        if (!mounted) return;
-        setState(() => isRecording = false);
+    // Sonucu BEKLEMEDEN ilerle — cevap gelince slot güncellenir.
+    final slot = results.length;
+    results.add({
+      'word': word,
+      'correct': null,
+      'error': false,
+      'pending': true,
+    });
 
-        final spoke = _maxAmplitude > kSilenceThresholdDb;
+    final t0 = DateTime.now();
+    final future = sendPronunciationToApi(rec.path!).then((result) {
+      _uploadMs.add(DateTime.now().difference(t0).inMilliseconds);
+      final isError = result['error'] == true;
+      final isPathological = !isError && result['is_pathological'] == true;
 
-        if (!spoke) {
-          // Çocuk konuşmadı — kayıt modele hiç gönderilmiyor, tekrar denesin.
-          await _tts.speak('Seni duyamadım, tekrar dener misin?');
-          return;
-        }
-
-        if (path != null) {
-          final result = await sendPronunciationToApi(path);
-          if (!mounted) return;
-          final isError = result['error'] == true;
-          final isPathological = !isError && result['is_pathological'] == true;
-          await WordHistoryService.recordResult(
-            word: word,
-            isPathological: isPathological,
-          );
-          results.add({
-            'word': word,
-            'correct': !isError && !isPathological,
-            'error': isError,
-          });
-        }
-
-        _advance();
+      // Hata varsa geçmişe HİÇ yazma. Eskiden bağlantı koptuğunda
+      // "doğru telaffuz" olarak kaydediliyordu.
+      if (!isError) {
+        WordHistoryService.recordResult(
+          word: word,
+          isPathological: isPathological,
+        );
       }
+
+      if (!mounted) return;
+      setState(() {
+        results[slot] = {
+          'word': word,
+          'correct': !isError && !isPathological,
+          'error': isError,
+          'pending': false,
+        };
+      });
+    });
+    _pending.add(future);
+
+    unawaited(Sfx.play(Sfx.wordDone));
+
+    // Tik görünsün, sonra sonraki kelimeye geç.
+    await Future.delayed(const Duration(milliseconds: 550));
+    if (!mounted) return;
+    _advance();
+  }
+
+  /// Ses yakalanamadı: nötr efekt + görsel ipucu.
+  /// Efekt tek başına yetmez — okuma bilmeyen yaştaki çocuk sadece bir
+  /// "pop" duyunca ne yapacağını bilemez, o yüzden ikon da gösteriliyor.
+  void _showRetry() {
+    unawaited(Sfx.play(Sfx.tekrar, volume: 0.7));
+    if (!mounted) return;
+    setState(() => showRetryHint = true);
+    _retryHintTimer?.cancel();
+    _retryHintTimer = Timer(const Duration(milliseconds: 1800), () {
+      if (mounted) setState(() => showRetryHint = false);
     });
   }
 
@@ -1311,13 +1611,25 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
       setState(() => index++);
     } else {
       setState(() => finished = true);
+      // Son kelimede yalnızca bekleyen analizler toplanır.
+      _finalWaitStart = DateTime.now();
+      Future.wait(_pending).then((_) {
+        if (!mounted) return;
+        setState(() {
+          _finalWaitMs = _finalWaitStart == null
+              ? null
+              : DateTime.now().difference(_finalWaitStart!).inMilliseconds;
+        });
+      });
+      unawaited(Sfx.play(Sfx.sectionDone));
     }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _ampSub?.cancel();
+    _retryHintTimer?.cancel();
+    _doneTickTimer?.cancel();
+    _smart.dispose();
     _audioRecorder.dispose();
     super.dispose();
   }
@@ -1402,24 +1714,33 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.red, width: 4),
+                              border: Border.all(
+                                color: showDoneTick
+                                    ? Colors.green
+                                    : Colors.red,
+                                width: 4,
+                              ),
                             ),
                           ),
                         if (isRecording)
                           Center(
-                            child: SizedBox(
+                            child: showDoneTick
+                                ? _doneTick(60)
+                                : SizedBox(
                               width: 60,
                               height: 60,
                               child: CircularProgressIndicator(
                                 value: recordProgress,
                                 strokeWidth: 5,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                valueColor:
+                                const AlwaysStoppedAnimation<Color>(
                                   Colors.red,
                                 ),
                                 backgroundColor: Colors.white70,
                               ),
                             ),
                           ),
+                        _retryHintOverlay(),
                       ],
                     ),
                   ),
@@ -1437,8 +1758,44 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
     );
   }
 
+  /// "Tekrar dene" ipucu — ses yakalanamadığında 1.8 sn görünür.
+  Widget _retryHintOverlay() {
+    return IgnorePointer(
+      child: AnimatedOpacity(
+        opacity: showRetryHint ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 220),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.92),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.mic_rounded,
+                size: 72,
+                color: AppColors.primary,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tekrar dene!',
+                style: GoogleFonts.baloo2(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primaryDark,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSummary() {
     final correctCount = results.where((r) => r['correct'] == true).length;
+    final pendingCount = results.where((r) => r['pending'] == true).length;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -1452,7 +1809,9 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
           Padding(
             padding: const EdgeInsets.all(20),
             child: Text(
-              '$correctCount / ${results.length} doğru!',
+              pendingCount > 0
+                  ? 'Sonuçlar geliyor...'
+                  : '$correctCount / ${results.length} doğru!',
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
@@ -1466,6 +1825,7 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
               itemCount: results.length,
               itemBuilder: (context, i) {
                 final r = results[i];
+                final pending = r['pending'] == true;
                 final isError = r['error'] == true;
                 final correct = r['correct'] == true;
                 return Card(
@@ -1475,10 +1835,21 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: isError
+                      backgroundColor: pending
+                          ? AppColors.surfaceLight
+                          : (isError
                           ? Colors.grey
-                          : (correct ? Colors.green : Colors.red),
-                      child: Icon(
+                          : (correct ? Colors.green : Colors.red)),
+                      child: pending
+                          ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: AppColors.primary,
+                        ),
+                      )
+                          : Icon(
                         isError
                             ? Icons.warning
                             : (correct ? Icons.check : Icons.close),
@@ -1490,17 +1861,22 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      isError
+                      pending
+                          ? 'Analiz ediliyor...'
+                          : (isError
                           ? 'Analiz edilemedi'
-                          : (correct ? 'Bu sefer doğru!' : 'Hâlâ zorlanıyor'),
+                          : (correct
+                          ? 'Bu sefer doğru!'
+                          : 'Hâlâ zorlanıyor')),
                     ),
                   ),
                 );
               },
             ),
           ),
+          _timingLine(),
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
             child: GradientButton(
               label: 'Tamam',
               width: double.infinity,
@@ -1510,6 +1886,30 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Ölçüm satırı — bkz. BolumPlayPage._timingLine açıklaması.
+  Widget _timingLine() {
+    if (_uploadMs.isEmpty && _finalWaitMs == null) {
+      return const SizedBox.shrink();
+    }
+    final avg = _uploadMs.isEmpty
+        ? 0
+        : (_uploadMs.reduce((a, b) => a + b) / _uploadMs.length).round();
+    final worst = _uploadMs.isEmpty
+        ? 0
+        : _uploadMs.reduce((a, b) => a > b ? a : b);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+      child: Text(
+        'bekleme ${_finalWaitMs ?? 0} ms  •  '
+            'istek ort ${avg} ms / en yavaş ${worst} ms  •  '
+            'n=${_uploadMs.length}',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
       ),
     );
   }
@@ -1535,14 +1935,17 @@ class _RozetTanimi {
 }
 
 class RozetlerPage extends StatefulWidget {
-  final List<int> bolumStars;
-  final List<bool> bolumCompleted;
+  /// Akışta bugüne kadar tamamlanan kelime sayısı (0–24).
+  final int ilerleme;
+  final int yildiz;
+  final bool tamamlandi;
   final int streak;
 
   const RozetlerPage({
     super.key,
-    required this.bolumStars,
-    required this.bolumCompleted,
+    required this.ilerleme,
+    required this.yildiz,
+    required this.tamamlandi,
     required this.streak,
   });
 
@@ -1564,27 +1967,25 @@ class _RozetlerPageState extends State<RozetlerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final ilkAdim = widget.bolumCompleted.any((c) => c);
-    final yildizUstasi = widget.bolumStars.any((s) => s >= 3);
-    final tumBolumler =
-        widget.bolumCompleted.isNotEmpty &&
-        widget.bolumCompleted.every((c) => c);
+    final ilkMola = widget.ilerleme >= AppWords.etaplar.first;
+    final yildizUstasi = widget.yildiz >= 3;
+    final tumKelimeler = widget.tamamlandi;
     final seri3 = widget.streak >= 3;
     final seri7 = widget.streak >= 7;
     final koleksiyonTam =
         collectedAnimalCount != null &&
-        collectedAnimalCount! >= CornerAnimals.assets.length;
+            collectedAnimalCount! >= CornerAnimals.assets.length;
 
     final rozetler = <_RozetTanimi>[
       _RozetTanimi(
         baslik: 'İlk Adım',
-        aciklama: 'Bir bölümü tamamla',
+        aciklama: 'İlk ${AppWords.etaplar.first} kelimeyi bitir',
         icon: Icons.flag,
-        kazanildi: ilkAdim,
+        kazanildi: ilkMola,
       ),
       _RozetTanimi(
         baslik: 'Yıldız Ustası',
-        aciklama: 'Bir bölümde 3 yıldız al',
+        aciklama: 'Değerlendirmeden 3 yıldız al',
         icon: Icons.star,
         kazanildi: yildizUstasi,
       ),
@@ -1602,15 +2003,15 @@ class _RozetlerPageState extends State<RozetlerPage> {
       ),
       _RozetTanimi(
         baslik: 'Hayvan Koleksiyoncusu',
-        aciklama: 'Ekranlarda çıkan tüm hayvanları gör',
+        aciklama: 'Mola ekranlarında tüm hayvanları kazan',
         icon: Icons.pets,
         kazanildi: koleksiyonTam,
       ),
       _RozetTanimi(
-        baslik: 'Bölüm Şampiyonu',
-        aciklama: 'Tüm bölümleri tamamla',
+        baslik: 'Şampiyon',
+        aciklama: '${AppWords.hepsi.length} kelimenin hepsini bitir',
         icon: Icons.emoji_events,
-        kazanildi: tumBolumler,
+        kazanildi: tumKelimeler,
       ),
     ];
 
@@ -1689,16 +2090,16 @@ class _RozetlerPageState extends State<RozetlerPage> {
 }
 
 // ============================================================
-// BolumPlayPage — bir bölümün tamamını yönetir:
-// triplet gösterimi -> kayıt -> arka planda modele gönderim
-// -> "Aferin" ekranı -> final sonuç ekranı
+// BolumPlayPage — 24 kelimelik kesintisiz akışı yönetir:
+// üçerli gösterim -> kayıt -> arka planda modele gönderim
+// -> 9. ve 18. kelimede mola ekranı -> 24.'te bitiş ekranı.
+// Bölüm seçimi yok; yarıda bırakılırsa kaldığı yerden devam eder.
 // ============================================================
 
-enum _Stage { playing, encourage, final_ }
+enum _Stage { loading, playing, encourage, final_ }
 
 class BolumPlayPage extends StatefulWidget {
-  final int bolumIndex;
-  const BolumPlayPage({super.key, required this.bolumIndex});
+  const BolumPlayPage({super.key});
 
   @override
   State<BolumPlayPage> createState() => _BolumPlayPageState();
@@ -1706,14 +2107,26 @@ class BolumPlayPage extends StatefulWidget {
 
 class _BolumPlayPageState extends State<BolumPlayPage>
     with TickerProviderStateMixin {
-  late List<Map<String, String>> words; // bölümdeki tüm kelimeler (9 ya da 5)
+  late List<Map<String, String>> words; // akıştaki tüm kelimeler (24)
   late List<List<Map<String, String>>>
   triplets; // 3'erli (son parça 2 olabilir)
   late List<int>
   tripletOffsets; // her tripletin flat listedeki başlangıç indeksi
 
   int tripletIndex = 0;
-  _Stage stage = _Stage.playing;
+  _Stage stage = _Stage.loading;
+
+  /// Mola ekranında kazanılan hayvan ve o ana kadarki koleksiyon.
+  String? _molaOdulu;
+  Set<String> _kazanilanHayvanlar = {};
+
+  /// Molaya girildiği andaki biten kelime sayısı. Geçiş animasyonu sırasında
+  /// tripletIndex çoktan ilerlemiş oluyor; ekranın "9 kelime bitti" demeye
+  /// devam etmesi için değer donduruluyor.
+  int _molaBiten = 0;
+
+  /// Geçiş animasyonunda arkada kalan ekran mola ekranı mıydı?
+  bool _wipeMoladan = false;
 
   List<bool> completedTap = []; // mevcut triplet için, hangi resim kaydedildi
   List<String?> audioPaths = []; // global index -> ses dosya yolu
@@ -1726,40 +2139,32 @@ class _BolumPlayPageState extends State<BolumPlayPage>
 
   final AudioRecorder _audioRecorder = AudioRecorder();
   final FlutterTts _tts = FlutterTts();
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  late final SmartRecorder _smart = SmartRecorder(_audioRecorder);
   late ConfettiController _confettiController;
-  Timer? _timer;
-  StreamSubscription<Amplitude>? _ampSub;
-  double _maxAmplitude = -160.0;
 
   late AnimationController _transitionController;
   Duration? _transitionDuration;
   bool _isTransitioning = false;
   Timer? _encourageDelayTimer;
 
+  bool showRetryHint = false;
+  Timer? _retryHintTimer;
+
+  /// Kayıt başarıyla bitince çubuk yerine kısa süre yeşil tik.
+  bool showDoneTick = false;
+  Timer? _doneTickTimer;
+
+  /// Ölçüm: her isteğin gidiş-dönüş süresi ve final ekranındaki bekleme.
+  final List<int> _uploadMs = [];
+  int? _finalWaitMs;
+  DateTime? _finalWaitStart;
+
   late String _cornerAnimalAsset;
-
-  static const List<String> _encouragements = [
-    'Harikasın!',
-    'Çok iyi!',
-    'Süpersin!',
-    'Çok güzel okudun!',
-    'Bravo!',
-    'Aferin sana!',
-  ];
-  final Random _random = Random();
-
-  Future<void> _speakEncouragement() async {
-    final phrase = _encouragements[_random.nextInt(_encouragements.length)];
-    try {
-      await _tts.speak(phrase);
-    } catch (_) {}
-  }
 
   @override
   void initState() {
     super.initState();
-    words = AppWords.bolumler[widget.bolumIndex];
+    words = AppWords.hepsi;
     triplets = chunkList(words, 3);
 
     tripletOffsets = [];
@@ -1773,7 +2178,6 @@ class _BolumPlayPageState extends State<BolumPlayPage>
     apiResults = List.filled(words.length, null);
     completedTap = List.filled(triplets[0].length, false);
     _cornerAnimalAsset = CornerAnimals.pickRandom();
-    AnimalCollectionService.recordSeen(_cornerAnimalAsset);
 
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 2),
@@ -1785,6 +2189,43 @@ class _BolumPlayPageState extends State<BolumPlayPage>
       }
     });
     _initTts();
+    _kaldiginYerdenYukle();
+  }
+
+  // ------------------------------------------------------------
+  // Yarıda bırakılan akışı geri yükler. Tamamlanan kelime sayısı ve
+  // o kelimelerin model sonuçları kalıcı; çocuk kaldığı üçlüden devam
+  // eder. Akış bitince bu kayıtlar silinir (bkz. _saveSonuc).
+  // ------------------------------------------------------------
+  Future<void> _kaldiginYerdenYukle() async {
+    final prefs = await SharedPreferences.getInstance();
+    final kazanilanlar = await AnimalCollectionService.load();
+    if (!mounted) return;
+
+    final tamamlanan = (prefs.getInt('akis_tamamlanan') ?? 0).clamp(
+      0,
+      words.length,
+    );
+    final kayitli = prefs.getStringList('akis_sonuclar') ?? const [];
+
+    for (int i = 0; i < kayitli.length && i < apiResults.length; i++) {
+      if (kayitli[i].isEmpty) continue;
+      try {
+        apiResults[i] = jsonDecode(kayitli[i]) as Map<String, dynamic>;
+      } catch (_) {
+        // Bozuk kayıt: o kelime "analiz edilemedi" olarak görünür.
+      }
+    }
+
+    // Tamamlanan kelime sayısı her zaman 3'ün katı — üçlü bitmeden kaydetmiyoruz.
+    final baslangicTriplet = (tamamlanan ~/ 3).clamp(0, triplets.length - 1);
+
+    setState(() {
+      _kazanilanHayvanlar = kazanilanlar;
+      tripletIndex = tamamlanan >= words.length ? 0 : baslangicTriplet;
+      completedTap = List.filled(currentTripletWords.length, false);
+      stage = _Stage.playing;
+    });
   }
 
   Future<void> _initTts() async {
@@ -1817,108 +2258,199 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   }
 
   Future<void> _startRecording(int globalIndex, int localIndex) async {
-    if (!await _audioRecorder.hasPermission()) return;
-
     final dir = await getTemporaryDirectory();
     final filePath =
-        '${dir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        '${dir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-    await _audioRecorder.start(
-      const RecordConfig(encoder: AudioEncoder.aacLc, sampleRate: 16000),
-      path: filePath,
-    );
-
-    if (!mounted) return;
     setState(() {
       isRecording = true;
       recordProgress = 0.0;
       recordingGlobalIndex = globalIndex;
     });
 
-    _maxAmplitude = -160.0;
-    _ampSub = _audioRecorder
-        .onAmplitudeChanged(const Duration(milliseconds: 100))
-        .listen((amp) {
-          if (amp.current > _maxAmplitude) _maxAmplitude = amp.current;
-        });
+    final rec = await _smart.record(
+      path: filePath,
+      onProgress: (p) {
+        if (mounted) setState(() => recordProgress = p);
+      },
+    );
 
-    int ticks = 0;
-    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) async {
-      ticks++;
-      if (!mounted) {
-        timer.cancel();
-        return;
+    if (!mounted) return;
+
+    if (!rec.isOk) {
+      setState(() {
+        isRecording = false;
+        recordProgress = 0.0;
+        recordingGlobalIndex = null;
+      });
+      if (rec.outcome == RecordOutcome.noSpeech ||
+          rec.outcome == RecordOutcome.tooShort) {
+        _showRetry();
       }
-      setState(() => recordProgress = ticks / 100.0);
+      return;
+    }
 
-      if (ticks >= 100) {
-        timer.cancel();
-        final path = await _audioRecorder.stop();
-        await _ampSub?.cancel();
-        if (!mounted) return;
-
-        final spoke = _maxAmplitude > kSilenceThresholdDb;
-
-        if (!spoke) {
-          // Çocuk konuşmadı — kayıt modele hiç gönderilmiyor, tekrar denesin.
-          setState(() {
-            isRecording = false;
-            recordProgress = 0.0;
-            recordingGlobalIndex = null;
-          });
-          await _tts.speak('Seni duyamadım, tekrar dener misin?');
-          return;
-        }
-
-        setState(() {
-          isRecording = false;
-          recordProgress = 0.0;
-          recordingGlobalIndex = null;
-          completedTap[localIndex] = true;
-        });
-
-        if (path != null) {
-          audioPaths[globalIndex] = path;
-          _uploadInBackground(globalIndex, path);
-        }
-
-        await _speakEncouragement();
-        if (!mounted) return;
-
-        _checkTripletDone();
-      }
+    // Çubuk yerine yeşil tik — kısa bir onay anı.
+    setState(() {
+      recordProgress = 1.0;
+      showDoneTick = true;
+      completedTap[localIndex] = true;
     });
+
+    audioPaths[globalIndex] = rec.path;
+    _uploadInBackground(globalIndex, rec.path!);
+
+    unawaited(Sfx.play(Sfx.wordDone));
+
+    _doneTickTimer?.cancel();
+    _doneTickTimer = Timer(const Duration(milliseconds: 550), () {
+      if (!mounted) return;
+      setState(() {
+        showDoneTick = false;
+        isRecording = false;
+        recordProgress = 0.0;
+        recordingGlobalIndex = null;
+      });
+      _checkTripletDone();
+    });
+  }
+
+  /// Ses yakalanamadı: nötr efekt + görsel ipucu.
+  void _showRetry() {
+    unawaited(Sfx.play(Sfx.tekrar, volume: 0.7));
+    if (!mounted) return;
+    setState(() => showRetryHint = true);
+    _retryHintTimer?.cancel();
+    _retryHintTimer = Timer(const Duration(milliseconds: 1800), () {
+      if (mounted) setState(() => showRetryHint = false);
+    });
+  }
+
+  /// "Tekrar dene" ipucu — ses yakalanamadığında 1.8 sn görünür.
+  Widget _retryHintOverlay() {
+    return IgnorePointer(
+      child: AnimatedOpacity(
+        opacity: showRetryHint ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 220),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.96),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.mic_rounded,
+                  size: 64,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Tekrar dene!',
+                  style: GoogleFonts.baloo2(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   // ------------------------------------------------------------
   // Ses dosyasını arka planda modele gönder (bekletmeden)
   // ------------------------------------------------------------
   void _uploadInBackground(int globalIndex, String path) {
-    final future = sendPronunciationToApi(path).then((result) {
+    final t0 = DateTime.now();
+    final future = sendPronunciationToApi(path).then((result) async {
+      _uploadMs.add(DateTime.now().difference(t0).inMilliseconds);
       apiResults[globalIndex] = result;
+
+      // Geçmişe sonuç gelir gelmez yazılıyor: çocuk akışı yarıda bıraksa da
+      // o kelime Veli Paneli'ne ve Alıştırmalar'a giriyor.
+      if (result['error'] != true) {
+        await WordHistoryService.recordResult(
+          word: words[globalIndex]['word']!,
+          isPathological: result['is_pathological'] == true,
+        );
+      }
+      await _sonuclariKaydet();
     });
     pendingUploads.add(future);
   }
 
-  void _checkTripletDone() {
-    if (completedTap.every((c) => c)) {
-      setState(() => stage = _Stage.encourage);
-      _confettiController.play();
-      _playEncourageSound();
-      // "Aferin!" ekranı bir süre görünsün, sonra kedi geçişi başlasın.
-      _encourageDelayTimer?.cancel();
-      _encourageDelayTimer = Timer(
-        const Duration(milliseconds: 1400),
-        _startTransition,
-      );
-    }
+  /// Eldeki model sonuçlarını diske yazar (sonuç geldikçe).
+  Future<void> _sonuclariKaydet() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'akis_sonuclar',
+      apiResults.map((r) => r == null ? '' : jsonEncode(r)).toList(),
+    );
   }
 
-  Future<void> _playEncourageSound() async {
-    // Var olan bir ses dosyası varsa çalınır; yoksa sessizce geçilir.
-    try {
-      await _audioPlayer.play(AssetSource('sesler/dogru.m4a'));
-    } catch (_) {}
+  /// Kaç kelimenin bittiğini diske yazar. Üçlü değiştikten sonra çağrılır,
+  /// böylece değer her zaman tamamlanmış üçlülerin kelime sayısıdır.
+  Future<void> _ilerlemeyiKaydet() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('akis_tamamlanan', tripletOffsets[tripletIndex]);
+  }
+
+  /// Üçlü bitti: son kelime bir mola noktasına denk geliyorsa kutlama
+  /// ekranı, değilse doğrudan sonraki üçlüye kedi geçişi.
+  void _checkTripletDone() {
+    if (!completedTap.every((c) => c)) return;
+
+    final bitenKelime =
+        tripletOffsets[tripletIndex] + currentTripletWords.length;
+    final sonUclu = tripletIndex >= triplets.length - 1;
+    final mola = AppWords.molaNoktalari.contains(bitenKelime);
+
+    unawaited(Sfx.play(Sfx.tripletDone));
+
+    if (!mola && !sonUclu) {
+      // Ara üçlüler: kutlama yok, doğrudan geçiş.
+      _wipeMoladan = false;
+      _startTransition();
+      return;
+    }
+
+    if (mola) {
+      final odul = CornerAnimals.pickReward(_kazanilanHayvanlar);
+      unawaited(AnimalCollectionService.recordSeen(odul));
+      setState(() {
+        _molaOdulu = odul;
+        _molaBiten = bitenKelime;
+        _kazanilanHayvanlar = {..._kazanilanHayvanlar, odul};
+        stage = _Stage.encourage;
+      });
+      _confettiController.play();
+      _wipeMoladan = true;
+      // Mola ekranı seyredilsin, sonra kendiliğinden devam etsin.
+      _encourageDelayTimer?.cancel();
+      _encourageDelayTimer = Timer(
+        const Duration(milliseconds: 2600),
+        _startTransition,
+      );
+      return;
+    }
+
+    // Son üçlü: doğrudan bitiş ekranına.
+    _wipeMoladan = false;
+    _startTransition();
   }
 
   // ------------------------------------------------------------
@@ -1928,7 +2460,7 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   // Son triplet ise, bekleyen analizler arka planda beklenir.
   // ------------------------------------------------------------
   void _startTransition() {
-    if (!mounted || stage != _Stage.encourage) return;
+    if (!mounted) return;
 
     if (tripletIndex < triplets.length - 1) {
       setState(() {
@@ -1938,16 +2470,22 @@ class _BolumPlayPageState extends State<BolumPlayPage>
         _isTransitioning = true;
         _cornerAnimalAsset = CornerAnimals.pickRandom();
       });
-      AnimalCollectionService.recordSeen(_cornerAnimalAsset);
+      unawaited(_ilerlemeyiKaydet());
     } else {
       setState(() {
         stage = _Stage.final_;
         _isTransitioning = true;
       });
+      unawaited(Sfx.play(Sfx.sectionDone));
+      _finalWaitStart = DateTime.now();
       Future.wait(pendingUploads).then((_) async {
         if (!mounted) return;
-        setState(() {});
-        await _saveBolumResult();
+        setState(() {
+          _finalWaitMs = _finalWaitStart == null
+              ? null
+              : DateTime.now().difference(_finalWaitStart!).inMilliseconds;
+        });
+        await _saveSonuc();
       });
     }
 
@@ -1958,34 +2496,32 @@ class _BolumPlayPageState extends State<BolumPlayPage>
     // Süre henüz bilinmiyorsa (ilk oynatma), Lottie'nin onLoaded'ı forward'ı tetikler.
   }
 
-  Future<void> _saveBolumResult() async {
+  /// Akış bitti: yıldızı hesapla, tamamlandı işaretle, devam kaydını sil.
+  /// Kelime geçmişi sonuç geldikçe zaten yazıldı (bkz. _uploadInBackground).
+  Future<void> _saveSonuc() async {
     final prefs = await SharedPreferences.getInstance();
 
     int totalStars = 0;
-    for (int i = 0; i < apiResults.length; i++) {
-      final res = apiResults[i];
+    for (final res in apiResults) {
       if (res == null || res['error'] == true) continue;
-      final isPathological = res['is_pathological'] == true;
-      if (!isPathological) totalStars += 3;
-      await WordHistoryService.recordResult(
-        word: words[i]['word']!,
-        isPathological: isPathological,
-      );
+      if (res['is_pathological'] != true) totalStars += 3;
     }
     final avgStars = words.isEmpty ? 0 : (totalStars / words.length).round();
 
-    await prefs.setInt('bolum${widget.bolumIndex}_stars', avgStars);
-    await prefs.setBool('bolum${widget.bolumIndex}_completed', true);
+    await prefs.setInt('akis_yildiz', avgStars);
+    await prefs.setBool('akis_tamamlandi', true);
+    await prefs.remove('akis_tamamlanan');
+    await prefs.remove('akis_sonuclar');
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
     _encourageDelayTimer?.cancel();
-    _ampSub?.cancel();
+    _retryHintTimer?.cancel();
+    _doneTickTimer?.cancel();
+    _smart.dispose();
     _confettiController.dispose();
     _transitionController.dispose();
-    _audioPlayer.dispose();
     _audioRecorder.dispose();
     super.dispose();
   }
@@ -1993,13 +2529,21 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   @override
   Widget build(BuildContext context) {
     final Widget currentView = switch (stage) {
+      _Stage.loading => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      ),
       _Stage.playing => _buildTripletView(),
       _Stage.encourage => _buildEncourageView(),
       _Stage.final_ => _buildFinalView(),
     };
 
-    if (!_isTransitioning) return currentView;
-    return _buildCatWipeTransition(newContent: currentView);
+    final Widget body = _isTransitioning
+        ? _buildCatWipeTransition(newContent: currentView)
+        : currentView;
+
+    // "Tekrar dene" ipucu her şeyin üstünde.
+    return Stack(children: [body, _retryHintOverlay()]);
   }
 
   // ------------------------------------------------------------
@@ -2021,7 +2565,14 @@ class _BolumPlayPageState extends State<BolumPlayPage>
             newContent,
             ClipRect(
               clipper: _TopWipeClipper(catY),
-              child: _buildEncourageView(),
+              // Molalardan sonra kutlama ekranı silinerek açılıyor; ara
+              // üçlülerde silinecek bir kutlama yok, düz zemin yeterli.
+              child: _wipeMoladan
+                  ? _buildEncourageView()
+                  : const ColoredBox(
+                color: AppColors.background,
+                child: SizedBox.expand(),
+              ),
             ),
             Positioned(
               left: 0,
@@ -2063,7 +2614,7 @@ class _BolumPlayPageState extends State<BolumPlayPage>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Bölüm ${widget.bolumIndex + 1}'),
+        title: const Text('Kelimeler'),
         backgroundColor: AppColors.primary,
         centerTitle: true,
       ),
@@ -2074,7 +2625,10 @@ class _BolumPlayPageState extends State<BolumPlayPage>
             child: Column(
               children: [
                 Text(
-                  '${tripletIndex + 1} / ${triplets.length}',
+                  // Bölüm yok: sayaç toplam 24 kelime üzerinden ilerliyor.
+                  '${tripletOffsets[tripletIndex] + 1}–'
+                      '${tripletOffsets[tripletIndex] + tw.length}'
+                      ' / ${words.length}',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -2093,24 +2647,24 @@ class _BolumPlayPageState extends State<BolumPlayPage>
                     child: SingleChildScrollView(
                       child: tw.length >= 3
                           ? Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [_imageCard(0), _imageCard(1)],
-                                ),
-                                const SizedBox(height: 24),
-                                _imageCard(2),
-                              ],
-                            )
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment:
+                            MainAxisAlignment.spaceEvenly,
+                            children: [_imageCard(0), _imageCard(1)],
+                          ),
+                          const SizedBox(height: 24),
+                          _imageCard(2),
+                        ],
+                      )
                           : Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: List.generate(
-                                tw.length,
-                                (i) => _imageCard(i),
-                              ),
-                            ),
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: List.generate(
+                          tw.length,
+                              (i) => _imageCard(i),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -2164,7 +2718,10 @@ class _BolumPlayPageState extends State<BolumPlayPage>
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.red, width: 4),
+                  border: Border.all(
+                    color: showDoneTick ? Colors.green : Colors.red,
+                    width: 4,
+                  ),
                 ),
               ),
             if (isDone && !isThisRecording)
@@ -2190,7 +2747,9 @@ class _BolumPlayPageState extends State<BolumPlayPage>
             if (isThisRecording)
               Positioned.fill(
                 child: Center(
-                  child: SizedBox(
+                  child: showDoneTick
+                      ? _doneTick(50)
+                      : SizedBox(
                     width: 50,
                     height: 50,
                     child: CircularProgressIndicator(
@@ -2211,9 +2770,15 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   }
 
   // ------------------------------------------------------------
-  // Ekran: "Aferin, harikasın!" + Devam Et butonu
+  // Ekran: mola kutlaması — 9. ve 18. kelimede. Çocuk bir hayvan
+  // arkadaş kazanır, kalan yolu 9 · 9 · 6 çubuklarında görür.
+  // Buton yok: 2,6 sn sonra kendiliğinden devam eder.
   // ------------------------------------------------------------
   Widget _buildEncourageView() {
+    final biten = _molaBiten;
+    final kalan = words.length - biten;
+    final odul = _molaOdulu;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -2226,27 +2791,121 @@ class _BolumPlayPageState extends State<BolumPlayPage>
             gravity: 0.2,
           ),
           Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Aferin!',
-                  style: TextStyle(
-                    fontSize: 44,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.secondary,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (odul != null) ...[
+                    Container(
+                      width: 168,
+                      height: 168,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary, width: 6),
+                      ),
+                      padding: const EdgeInsets.all(14),
+                      child: Image.asset(
+                        odul,
+                        fit: BoxFit.contain,
+                        errorBuilder: (c, e, s) => const Icon(
+                          Icons.pets,
+                          size: 64,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Yeni arkadaş: ${CornerAnimals.adlar[odul] ?? 'Sürpriz'}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                  ],
+                  const Text(
+                    'Harikasın!',
+                    style: TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.secondary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Muhteşemsin!',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    '$biten kelime bitti, $kalan kelime kaldı',
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  _etapCubuklari(biten),
+                ],
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  /// Etaplar (9 · 9 · 6) ayrı çubuklar olarak: çocuk kalan yolu görüyor.
+  Widget _etapCubuklari(int biten) {
+    int oncekiler = 0;
+    final cubuklar = <Widget>[];
+
+    for (int i = 0; i < AppWords.etaplar.length; i++) {
+      final uzunluk = AppWords.etaplar[i];
+      final dolu = ((biten - oncekiler) / uzunluk).clamp(0.0, 1.0);
+      oncekiler += uzunluk;
+
+      if (i > 0) cubuklar.add(const SizedBox(width: 8));
+      cubuklar.add(
+        Expanded(
+          flex: uzunluk,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: dolu,
+              minHeight: 14,
+              backgroundColor: AppColors.surfaceLight,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.primary,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Row(children: cubuklar),
+        const SizedBox(height: 8),
+        Text(
+          '$biten / ${words.length}',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.brown.shade300,
+          ),
+        ),
+      ],
     );
   }
 
@@ -2259,130 +2918,176 @@ class _BolumPlayPageState extends State<BolumPlayPage>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Bölüm Sonucu'),
+        title: const Text('Sonuç'),
         backgroundColor: AppColors.primary,
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
       body: stillWaiting
           ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 180,
-                    height: 180,
-                    child: Lottie.asset(
-                      'assets/lottie/cat_loader.lottie',
-                      repeat: true,
-                      errorBuilder: (c, e, s) =>
-                          const CircularProgressIndicator(
-                            color: AppColors.primary,
-                          ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Sonuçlar hazırlanıyor...',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 180,
+              height: 180,
+              child: Lottie.asset(
+                'assets/lottie/cat_loader.lottie',
+                repeat: true,
+                errorBuilder: (c, e, s) =>
+                const CircularProgressIndicator(
+                  color: AppColors.primary,
+                ),
               ),
-            )
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Sonuçlar hazırlanıyor...',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+          ],
+        ),
+      )
           : Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+            child: Column(
               children: [
-                const Padding(
-                  padding: EdgeInsets.all(20.0),
-                  child: Text(
-                    'Harika, Tamamladın!',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.secondary,
-                    ),
+                const Text(
+                  'Hepsi bu kadar!',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.secondary,
                   ),
                 ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: words.length,
-                    itemBuilder: (context, index) {
-                      final res = apiResults[index];
-                      final word = words[index]['word'];
-
-                      final bool isError = res == null || res['error'] == true;
-                      final bool isPathological =
-                          res != null && res['is_pathological'] == true;
-                      final double accuracy = isError
-                          ? 0
-                          : (1 -
-                                    ((res['pathology_probability'] ?? 1.0)
-                                        as num)) *
-                                100;
-
-                      return Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: isError
-                                ? Colors.grey
-                                : (isPathological ? Colors.red : Colors.green),
-                            child: Icon(
-                              isError
-                                  ? Icons.warning
-                                  : (isPathological
-                                        ? Icons.close
-                                        : Icons.check),
-                              color: Colors.white,
-                            ),
-                          ),
-                          title: Text(
-                            word?.toUpperCase() ?? "RESİM",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 17,
-                            ),
-                          ),
-                          subtitle: Text(
-                            isError
-                                ? "Analiz edilemedi"
-                                : (isPathological
-                                      ? "Hatalı Telaffuz"
-                                      : "Harika Telaffuz!"),
-                          ),
-                          trailing: isError
-                              ? null
-                              : Text(
-                                  "%${accuracy.toStringAsFixed(0)}",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: isPathological
-                                        ? Colors.red
-                                        : Colors.green,
-                                  ),
-                                ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: GradientButton(
-                    label: 'Bölümlere Dön',
-                    width: double.infinity,
-                    height: 60,
-                    fontSize: 22,
-                    onPressed: () {
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                    },
+                const SizedBox(height: 6),
+                Text(
+                  'Aferin, ${words.length} kelimeyi bitirdin',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: words.length,
+              itemBuilder: (context, index) {
+                final res = apiResults[index];
+                final word = words[index]['word'];
+
+                final bool isError = res == null || res['error'] == true;
+                final bool isPathological =
+                    res != null && res['is_pathological'] == true;
+                final double accuracy = isError
+                    ? 0
+                    : (1 -
+                    ((res['pathology_probability'] ?? 1.0)
+                    as num)) *
+                    100;
+
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: isError
+                          ? Colors.grey
+                          : (isPathological ? Colors.red : Colors.green),
+                      child: Icon(
+                        isError
+                            ? Icons.warning
+                            : (isPathological
+                            ? Icons.close
+                            : Icons.check),
+                        color: Colors.white,
+                      ),
+                    ),
+                    title: Text(
+                      word?.toUpperCase() ?? "RESİM",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                      ),
+                    ),
+                    subtitle: Text(
+                      isError
+                          ? "Analiz edilemedi"
+                          : (isPathological
+                          ? "Hatalı Telaffuz"
+                          : "Harika Telaffuz!"),
+                    ),
+                    trailing: isError
+                        ? null
+                        : Text(
+                      "%${accuracy.toStringAsFixed(0)}",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isPathological
+                            ? Colors.red
+                            : Colors.green,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          _timingLine(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            child: GradientButton(
+              label: 'Menüye Dön',
+              width: double.infinity,
+              height: 60,
+              fontSize: 22,
+              onPressed: () {
+                Navigator.popUntil(context, (route) => route.isFirst);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Ölçüm satırı — gecikme şikâyetlerini tahmin yerine sayıyla konuşmak için.
+  ///
+  /// "bekleme": final ekranı açıldıktan sonra sonuçların gelmesi için
+  /// geçen süre. Kayıtlar oyun sırasında arka planda gönderildiği için
+  /// bu değerin 0'a yakın olması beklenir — büyükse son kelimenin isteği
+  /// hâlâ sürüyor demektir.
+  ///
+  /// "istek": her ses dosyasının gidiş-dönüş süresi (ortalama / en yavaş).
+  /// Sunucu tarafı ölçümü ~200 ms; buradaki fark ağ ve dosya yüklemesidir.
+  Widget _timingLine() {
+    if (_uploadMs.isEmpty && _finalWaitMs == null) {
+      return const SizedBox.shrink();
+    }
+
+    final avg = _uploadMs.isEmpty
+        ? 0
+        : (_uploadMs.reduce((a, b) => a + b) / _uploadMs.length).round();
+    final worst = _uploadMs.isEmpty
+        ? 0
+        : _uploadMs.reduce((a, b) => a > b ? a : b);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+      child: Text(
+        'bekleme ${_finalWaitMs ?? 0} ms  •  '
+            'istek ort ${avg} ms / en yavaş ${worst} ms  •  '
+            'n=${_uploadMs.length}',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+      ),
     );
   }
 }
