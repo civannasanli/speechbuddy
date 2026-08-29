@@ -40,15 +40,18 @@ class Config {
 // sabit süreyle değil, konuşma bitince sonlanır.
 // ============================================================
 
-/// Konuşmanın başladığını kabul ettiğimiz eşik (dBFS).
-const double kSpeechStartDb = -20.0;
+/// Konuşma başlangıç eşiğinin varsayılanı (dBFS).
+/// Çalışan değer: [AppSettings.speechStartDb]
+const double kDefaultSpeechStartDb = -20.0;
 
-/// Konuşmanın bittiğini kabul ettiğimiz eşik. Başlangıçtan kasıtlı olarak
-/// daha düşük (histerezis) — kelime ortasındaki kısa duraklamada kesmesin.
-const double kSpeechEndDb = -38.0;
+/// Konuşma bitiş eşiğinin varsayılanı. Başlangıçtan kasıtlı olarak daha
+/// düşük (histerezis) — kelime ortasındaki kısa duraklamada kesmesin.
+/// Çalışan değer: [AppSettings.speechEndDb]
+const double kDefaultSpeechEndDb = -38.0;
 
-/// Konuşma bittikten sonra kaydın devam edeceği süre.
-const Duration kTrailingSilence = Duration(milliseconds: 450);
+/// Konuşma bittikten sonra kaydın devam edeceği sürenin varsayılanı (ms).
+/// Çalışan değer: [AppSettings.trailingSilenceMs]
+const int kDefaultTrailingSilenceMs = 450;
 
 /// Hiç konuşma gelmezse bu süre sonunda vazgeç.
 const Duration kNoSpeechTimeout = Duration(milliseconds: 2500);
@@ -62,10 +65,139 @@ const Duration kMinSpeechDuration = Duration(milliseconds: 250);
 /// UI ilerleme çubuğu tam ölçeği (kayıt genelde daha erken biter).
 const Duration kProgressFullScale = Duration(milliseconds: 3000);
 
-/// Modele gönderilen klibin iki yanına eklenen sessizlik (ms).
-/// Kayıt konuşma bölgesine kırpılır, sonra bu kadar sessizlik konur —
-/// böylece klip çocuğun tepki süresinden bağımsız, sabit biçimde olur.
-const int kClipPadMs = 150;
+/// Klip dolgusunun varsayılanı (ms). Ayarlar ekranından değiştirilebilir;
+/// çalışan değer için [AppSettings.clipPadMs] kullanılır.
+const int kDefaultClipPadMs = 150;
+
+// ============================================================
+// Uygulama ayarları
+//
+// Tek kaynak: hem Kelimeler hem Alıştırmalar aynı değerleri okur.
+// İkisi de aynı API ucuna gittiği için preprocessing'in birebir aynı
+// olması şart — ayrı ayrı sabit tutulursa iki modülün sonuçları
+// kıyaslanamaz hale gelir.
+// ============================================================
+
+class AppSettings {
+  /// Kayıt konuşmaya kırpıldıktan sonra iki yana eklenen sessizlik (ms).
+  ///
+  /// DİKKAT: başlangıç eşiği yüksekse (-20 gibi) sürtünmeli sesler
+  /// (/s/, /ş/, /f/) eşiği geçmeyebilir; o durumda konuşma başlangıcı
+  /// ünlüden itibaren işaretlenir ve baştaki sürtünme dolgunun içinde
+  /// kalır. "sabun, şapka, salıncak" gibi kelimelerde bu değer çok
+  /// düşükse kelimenin başı kırpılır. Şüphedeyseniz 300 ms deneyin.
+  static int clipPadMs = kDefaultClipPadMs;
+
+  /// Gönderimden önce dalga formunu tepe değerine göre ölçekle.
+  ///
+  /// Not: HuBERT'in feature extractor'ı zaten klip başına sıfır ortalama /
+  /// birim varyans normalizasyonu yapıyor (`do_normalize: true`), yani bu
+  /// büyük ölçüde gereksiz. Yine de kayıt seviyesi çok düşük olan
+  /// cihazlarda kırpma eşiklerinin davranışını değiştirebilir.
+  static bool normalizeAudio = false;
+
+  /// Konuşmanın başladığını kabul ettiğimiz eşik (dBFS).
+  ///
+  /// Yüksek değer (-20) gürültülü ortamda iyi ama sürtünmeli sesleri
+  /// kaçırır. Düşük değer (-36) sessiz konuşan çocuğu yakalar ama zemin
+  /// gürültüsüyle tetiklenebilir.
+  static double speechStartDb = kDefaultSpeechStartDb;
+
+  /// Konuşmanın bittiğini kabul ettiğimiz eşik (dBFS).
+  ///
+  /// Başlangıçtan HER ZAMAN düşük olmalı. Bu histerezis, kelime
+  /// ortasındaki kısa sessizliklerde (patlamalı ses öncesi kapanma)
+  /// kaydın erken kesilmesini engeller.
+  static double speechEndDb = kDefaultSpeechEndDb;
+
+  /// Konuşma bittikten sonra kaydın devam edeceği süre (ms).
+  static int trailingSilenceMs = kDefaultTrailingSilenceMs;
+
+  static bool soundEnabled = true;
+  static double ttsSpeed = 0.4;
+
+  static Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    clipPadMs = prefs.getInt('clipPadMs') ?? kDefaultClipPadMs;
+    normalizeAudio = prefs.getBool('normalizeAudio') ?? false;
+    speechStartDb = prefs.getDouble('speechStartDb') ?? kDefaultSpeechStartDb;
+    speechEndDb = prefs.getDouble('speechEndDb') ?? kDefaultSpeechEndDb;
+    trailingSilenceMs =
+        prefs.getInt('trailingSilenceMs') ?? kDefaultTrailingSilenceMs;
+    soundEnabled = prefs.getBool('soundEnabled') ?? true;
+    ttsSpeed = prefs.getDouble('ttsSpeed') ?? 0.4;
+    enforceHysteresis();
+  }
+
+  /// Bitiş eşiği başlangıcın altında kalmalı; değilse kayıt kelimeyi
+  /// ortasından böler. En az 4 dB fark zorlanır.
+  static void enforceHysteresis() {
+    if (speechEndDb > speechStartDb - 4.0) {
+      speechEndDb = speechStartDb - 4.0;
+    }
+    if (speechEndDb < -60.0) speechEndDb = -60.0;
+  }
+
+  static Future<void> setClipPadMs(int v) async {
+    clipPadMs = v.clamp(0, 1000);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('clipPadMs', clipPadMs);
+  }
+
+  static Future<void> setNormalizeAudio(bool v) async {
+    normalizeAudio = v;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('normalizeAudio', v);
+  }
+
+  static Future<void> setSpeechStartDb(double v) async {
+    speechStartDb = v.clamp(-50.0, -5.0);
+    enforceHysteresis();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('speechStartDb', speechStartDb);
+    await prefs.setDouble('speechEndDb', speechEndDb);
+  }
+
+  static Future<void> setSpeechEndDb(double v) async {
+    speechEndDb = v.clamp(-60.0, -8.0);
+    enforceHysteresis();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('speechEndDb', speechEndDb);
+  }
+
+  static Future<void> setTrailingSilenceMs(int v) async {
+    trailingSilenceMs = v.clamp(150, 1200);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('trailingSilenceMs', trailingSilenceMs);
+  }
+
+  static Future<void> setSoundEnabled(bool v) async {
+    soundEnabled = v;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('soundEnabled', v);
+  }
+
+  static Future<void> setTtsSpeed(double v) async {
+    ttsSpeed = v;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('ttsSpeed', v);
+  }
+
+  /// Kayıt işleme ayarlarını fabrika değerlerine döndürür.
+  static Future<void> resetRecording() async {
+    clipPadMs = kDefaultClipPadMs;
+    normalizeAudio = false;
+    speechStartDb = kDefaultSpeechStartDb;
+    speechEndDb = kDefaultSpeechEndDb;
+    trailingSilenceMs = kDefaultTrailingSilenceMs;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('clipPadMs', clipPadMs);
+    await prefs.setBool('normalizeAudio', normalizeAudio);
+    await prefs.setDouble('speechStartDb', speechStartDb);
+    await prefs.setDouble('speechEndDb', speechEndDb);
+    await prefs.setInt('trailingSilenceMs', trailingSilenceMs);
+  }
+}
 
 // Ses dosyasını modele gönderir — hem BolumPlayPage hem AlistirmalarPage kullanır.
 Future<Map<String, dynamic>> sendPronunciationToApi(String filePath) async {
@@ -107,14 +239,25 @@ class SmartRecordResult {
   final int speechMs;
   final int totalMs;
 
+  /// Kayıt boyunca görülen en yüksek dBFS — eşik kalibrasyonu için.
+  final double peakDb;
+
   const SmartRecordResult(
       this.outcome, {
         this.path,
         this.speechMs = 0,
         this.totalMs = 0,
+        this.peakDb = -160.0,
       });
 
   bool get isOk => outcome == RecordOutcome.ok && path != null;
+
+  @override
+  String toString() =>
+      'KAYIT ${outcome.name} speech=${speechMs}ms total=${totalMs}ms '
+          'peak=${peakDb.toStringAsFixed(1)}dB '
+          '(start=${AppSettings.speechStartDb} end=${AppSettings.speechEndDb} '
+          'pad=${AppSettings.clipPadMs}ms)';
 }
 
 /// WAV dosyasını konuşma bölgesine kırpar ve iki yana [padMs] sessizlik koyar.
@@ -130,7 +273,8 @@ Future<void> trimAndPadWav(
     String path, {
       required int speechStartMs,
       required int speechEndMs,
-      int padMs = 250,
+      int padMs = kDefaultClipPadMs,
+      bool normalize = false,
     }) async {
   try {
     final file = File(path);
@@ -186,7 +330,32 @@ Future<void> trimAndPadWav(
     final cutEnd = wantEnd.clamp(cutStart, available);
     if (cutEnd <= cutStart && headPad == 0 && tailPad == 0) return;
 
-    final core = bytes.sublist(dataOffset + cutStart, dataOffset + cutEnd);
+    var core = bytes.sublist(dataOffset + cutStart, dataOffset + cutEnd);
+
+    // Tepe normalizasyonu — yalnızca konuşma bölgesine uygulanır,
+    // dolgu sessizliği zaten sıfır.
+    if (normalize && core.length >= 2) {
+      final cd = ByteData.sublistView(core);
+      int peak = 0;
+      for (int i = 0; i + 1 < core.length; i += 2) {
+        final v = cd.getInt16(i, Endian.little).abs();
+        if (v > peak) peak = v;
+      }
+      // Çok sessiz kayıtta gürültüyü şişirmemek için alt sınır.
+      if (peak > 500) {
+        final gain = (32767 * 0.95) / peak;
+        if (gain > 1.02 || gain < 0.98) {
+          final scaled = Uint8List(core.length);
+          final sd = ByteData.sublistView(scaled);
+          for (int i = 0; i + 1 < core.length; i += 2) {
+            final v = (cd.getInt16(i, Endian.little) * gain).round();
+            sd.setInt16(i, v.clamp(-32768, 32767), Endian.little);
+          }
+          core = scaled;
+        }
+      }
+    }
+
     final newDataSize = headPad + core.length + tailPad;
 
     final header = Uint8List.fromList(bytes.sublist(0, dataOffset));
@@ -223,6 +392,11 @@ class SmartRecorder {
   int? _speechStartMs;
   int? _speechEndMs;
 
+  /// Kayıt boyunca görülen en yüksek dBFS. Eşik ayarlarken tek işe
+  /// yarayan sayı bu: "noSpeech" alıyorsanız tepe değeri başlangıç
+  /// eşiğinin altında kalmış demektir.
+  double _peakDb = -160.0;
+
   Future<SmartRecordResult> record({
     required String path,
     void Function(double progress)? onProgress,
@@ -256,6 +430,7 @@ class SmartRecorder {
     int frame = 0;
     _speechStartMs = null;
     _speechEndMs = null;
+    _peakDb = -160.0;
 
     if (onProgress != null) {
       _uiTimer = Timer.periodic(const Duration(milliseconds: 30), (_) {
@@ -276,13 +451,17 @@ class SmartRecorder {
 
       final now = DateTime.now();
       final db = amp.current;
+      if (db > _peakDb) _peakDb = db;
 
       // Faz 1: konuşmanın başlamasını bekle
       if (speechStart == null) {
-        if (db > kSpeechStartDb) {
+        if (db > AppSettings.speechStartDb) {
           speechStart = now;
           lastVoiced = now;
           _speechStartMs = now.difference(startedAt).inMilliseconds;
+          // Konuşma tek frame sürerse _speechEndMs null kalmasın,
+          // yoksa kırpma sessizce atlanır.
+          _speechEndMs = _speechStartMs;
         } else if (now.difference(startedAt) > kNoSpeechTimeout) {
           _finish(RecordOutcome.noSpeech, startedAt, null);
         }
@@ -290,7 +469,7 @@ class SmartRecorder {
       }
 
       // Faz 2: konuşmanın bitmesini bekle
-      if (db > kSpeechEndDb) {
+      if (db > AppSettings.speechEndDb) {
         lastVoiced = now;
         _speechEndMs = now.difference(startedAt).inMilliseconds;
       }
@@ -298,7 +477,7 @@ class SmartRecorder {
       final speechMs = now.difference(speechStart!).inMilliseconds;
       final silentFor = now.difference(lastVoiced!);
 
-      if (silentFor >= kTrailingSilence) {
+      if (silentFor.inMilliseconds >= AppSettings.trailingSilenceMs) {
         _finish(
           speechMs < kMinSpeechDuration.inMilliseconds
               ? RecordOutcome.tooShort
@@ -344,7 +523,8 @@ class SmartRecorder {
         path,
         speechStartMs: _speechStartMs!,
         speechEndMs: _speechEndMs!,
-        padMs: kClipPadMs,
+        padMs: AppSettings.clipPadMs,
+        normalize: AppSettings.normalizeAudio,
       );
     }
 
@@ -356,7 +536,10 @@ class SmartRecorder {
           ? 0
           : now.difference(speechStart).inMilliseconds,
       totalMs: now.difference(startedAt).inMilliseconds,
+      peakDb: _peakDb,
     );
+    // Eşik ayarlamak için gereken tek çıktı.
+    debugPrint(result.toString());
 
     if (_completer != null && !_completer!.isCompleted) {
       _completer!.complete(result);
@@ -373,7 +556,9 @@ class SmartRecorder {
       await _recorder.stop();
     } catch (_) {}
     if (_completer != null && !_completer!.isCompleted) {
-      _completer!.complete(const SmartRecordResult(RecordOutcome.failed));
+      _completer!.complete(
+        SmartRecordResult(RecordOutcome.failed, peakDb: _peakDb),
+      );
     }
     _completer = null;
   }
@@ -812,8 +997,11 @@ class SlideFadeRoute<T> extends PageRouteBuilder<T> {
 // main() ve MyApp
 // ============================================================
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Ayarlar ilk kayıttan önce hazır olmalı — iki modül de aynı
+  // preprocessing değerlerini kullanacak.
+  await AppSettings.load();
   runApp(const MyApp());
 }
 
@@ -1447,8 +1635,14 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
   Timer? _retryHintTimer;
 
   /// Kayıt başarıyla bitince çubuk yerine kısa süre yeşil tik gösterilir.
+  /// (Zamanlayıcı yok — tik ve ilerleme _startRecording içinde tek akışta
+  /// yönetiliyor, ayrı timer ile yarışıyordu.)
   bool showDoneTick = false;
-  Timer? _doneTickTimer;
+
+  /// Dokunma kilidi. `isRecording` yetmiyor: TTS kelimeyi okurken henüz
+  /// false olduğu için ikinci dokunuş ikinci bir TTS + kayıt başlatıyordu
+  /// ve aynı AudioRecorder üzerinde iki kayıt çakışıyordu.
+  bool _busy = false;
 
   /// Ölçüm: istek süreleri ve özet ekranındaki bekleme.
   final List<int> _uploadMs = [];
@@ -1483,21 +1677,27 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
   }
 
   Future<void> _initTts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final ttsSpeed = prefs.getDouble('ttsSpeed') ?? 0.4;
-    final soundEnabled = prefs.getBool('soundEnabled') ?? true;
+    // Ayarlar ekranından dönülmüş olabilir; güncel değerleri al.
+    await AppSettings.load();
     await _tts.setLanguage('tr-TR');
-    await _tts.setSpeechRate(soundEnabled ? ttsSpeed : 0.0);
-    await _tts.setVolume(soundEnabled ? 1.0 : 0.0);
+    await _tts.setSpeechRate(
+      AppSettings.soundEnabled ? AppSettings.ttsSpeed : 0.0,
+    );
+    await _tts.setVolume(AppSettings.soundEnabled ? 1.0 : 0.0);
     await _tts.awaitSpeakCompletion(true);
   }
 
   Future<void> _onTap() async {
-    if (isRecording || finished || queue == null) return;
-    final word = queue![index]['word']!;
-    await _tts.speak(word);
-    if (!mounted) return;
-    await _startRecording(word);
+    if (_busy || isRecording || finished || queue == null) return;
+    _busy = true;
+    try {
+      final word = queue![index]['word']!;
+      await _tts.speak(word);
+      if (!mounted) return;
+      await _startRecording(word);
+    } finally {
+      if (mounted) _busy = false;
+    }
   }
 
   Future<void> _startRecording(String word) async {
@@ -1536,16 +1736,6 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
     setState(() {
       recordProgress = 1.0;
       showDoneTick = true;
-    });
-    _doneTickTimer?.cancel();
-    _doneTickTimer = Timer(const Duration(milliseconds: 550), () {
-      if (mounted) {
-        setState(() {
-          showDoneTick = false;
-          isRecording = false;
-          recordProgress = 0.0;
-        });
-      }
     });
 
     // Sonucu BEKLEMEDEN ilerle — cevap gelince slot güncellenir.
@@ -1586,9 +1776,16 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
 
     unawaited(Sfx.play(Sfx.wordDone));
 
-    // Tik görünsün, sonra sonraki kelimeye geç.
+    // Tik görünsün, sonra tek adımda temizle ve ilerle.
+    // (Ayrı timer + delayed ikilisi yarışıyordu; yeni resim bir kare
+    // boyunca yeşil çerçeveyle görünebiliyordu.)
     await Future.delayed(const Duration(milliseconds: 550));
     if (!mounted) return;
+    setState(() {
+      showDoneTick = false;
+      isRecording = false;
+      recordProgress = 0.0;
+    });
     _advance();
   }
 
@@ -1628,7 +1825,6 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
   @override
   void dispose() {
     _retryHintTimer?.cancel();
-    _doneTickTimer?.cancel();
     _smart.dispose();
     _audioRecorder.dispose();
     super.dispose();
@@ -1708,7 +1904,21 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(20),
-                          child: Image.asset(w['image']!, fit: BoxFit.cover),
+                          child: Image.asset(
+                            w['image']!,
+                            fit: BoxFit.cover,
+                            // errorBuilder yoksa eksik asset kırmızı hata
+                            // kutusu olarak çıkıyordu.
+                            errorBuilder: (c, e, s) => Container(
+                              color: AppColors.surfaceLight,
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.image_not_supported_outlined,
+                                size: 56,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
                         ),
                         if (isRecording)
                           Container(
@@ -1766,7 +1976,7 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
         duration: const Duration(milliseconds: 220),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.92),
+            color: Colors.white.withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
@@ -1917,7 +2127,7 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
 
 // ============================================================
 // RozetlerPage — kazanılan/kilitli rozetler. Tamamlanma/yıldız/
-// seri rozetleri BolumSecPage'den gelen veriyle anında hesaplanır,
+// seri rozetleri MenuPage'den gelen veriyle anında hesaplanır,
 // hayvan koleksiyonu rozeti için kalıcı kayıt async yükleniyor.
 // ============================================================
 
@@ -2154,6 +2364,11 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   bool showDoneTick = false;
   Timer? _doneTickTimer;
 
+  /// Dokunma kilidi. `isRecording` yetmiyor: TTS kelimeyi okurken henüz
+  /// false olduğu için ikinci resme dokunulunca ikinci bir kayıt
+  /// başlıyordu ve aynı AudioRecorder üzerinde çakışıyordu.
+  bool _busy = false;
+
   /// Ölçüm: her isteğin gidiş-dönüş süresi ve final ekranındaki bekleme.
   final List<int> _uploadMs = [];
   int? _finalWaitMs;
@@ -2229,13 +2444,13 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   }
 
   Future<void> _initTts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final ttsSpeed = prefs.getDouble('ttsSpeed') ?? 0.4;
-    final soundEnabled = prefs.getBool('soundEnabled') ?? true;
-
+    // Ayarlar ekranından dönülmüş olabilir; güncel değerleri al.
+    await AppSettings.load();
     await _tts.setLanguage('tr-TR');
-    await _tts.setSpeechRate(soundEnabled ? ttsSpeed : 0.0);
-    await _tts.setVolume(soundEnabled ? 1.0 : 0.0);
+    await _tts.setSpeechRate(
+      AppSettings.soundEnabled ? AppSettings.ttsSpeed : 0.0,
+    );
+    await _tts.setVolume(AppSettings.soundEnabled ? 1.0 : 0.0);
     await _tts.awaitSpeakCompletion(true); // konuşma bitene kadar bekle
   }
 
@@ -2245,16 +2460,21 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   // Resme dokununca: önce kelimeyi seslendir, sonra kaydı başlat
   // ------------------------------------------------------------
   Future<void> _onImageTap(int localIndex) async {
-    if (completedTap[localIndex] || isRecording) return;
+    if (_busy || isRecording || completedTap[localIndex]) return;
+    if (stage != _Stage.playing || _isTransitioning) return;
 
-    final globalIndex = tripletOffsets[tripletIndex] + localIndex;
-    final word = currentTripletWords[localIndex]['word']!;
+    _busy = true;
+    try {
+      final globalIndex = tripletOffsets[tripletIndex] + localIndex;
+      final word = currentTripletWords[localIndex]['word']!;
 
-    await _tts.speak(
-      word,
-    ); // awaitSpeakCompletion(true) sayesinde bitene kadar bekler
-    if (!mounted) return;
-    await _startRecording(globalIndex, localIndex);
+      // awaitSpeakCompletion(true) sayesinde konuşma bitene kadar bekler
+      await _tts.speak(word);
+      if (!mounted) return;
+      await _startRecording(globalIndex, localIndex);
+    } finally {
+      if (mounted) _busy = false;
+    }
   }
 
   Future<void> _startRecording(int globalIndex, int localIndex) async {
@@ -2336,11 +2556,11 @@ class _BolumPlayPageState extends State<BolumPlayPage>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.96),
+              color: Colors.white.withValues(alpha: 0.96),
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
@@ -3104,27 +3324,42 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool soundEnabled = true;
-  double ttsSpeed = 0.4;
+  late TextEditingController _padController;
+  String? _padError;
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    _padController = TextEditingController(
+      text: AppSettings.clipPadMs.toString(),
+    );
   }
 
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      soundEnabled = prefs.getBool('soundEnabled') ?? true;
-      ttsSpeed = prefs.getDouble('ttsSpeed') ?? 0.4;
-    });
+  @override
+  void dispose() {
+    _padController.dispose();
+    super.dispose();
   }
 
-  Future<void> _saveSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('soundEnabled', soundEnabled);
-    await prefs.setDouble('ttsSpeed', ttsSpeed);
+  Future<void> _applyPad(String raw) async {
+    final v = int.tryParse(raw.trim());
+    if (v == null) {
+      setState(() => _padError = 'Sayı girin');
+      return;
+    }
+    if (v < 0 || v > 1000) {
+      setState(() => _padError = '0–1000 ms aralığında olmalı');
+      return;
+    }
+    await AppSettings.setClipPadMs(v);
+    if (!mounted) return;
+    setState(() => _padError = null);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Dolgu $v ms olarak kaydedildi'),
+        duration: const Duration(milliseconds: 1200),
+      ),
+    );
   }
 
   @override
@@ -3136,58 +3371,332 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: AppColors.primary,
         centerTitle: true,
       ),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(24),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // ---------------- Ses ----------------
+          _baslik('Ses'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Ses', style: TextStyle(fontSize: 24)),
-                  Switch(
-                    value: soundEnabled,
-                    onChanged: (val) {
-                      setState(() => soundEnabled = val);
-                      _saveSettings();
-                    },
-                    activeThumbColor: AppColors.primary,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Text('Konuşma Hızı', style: TextStyle(fontSize: 24)),
-              Slider(
-                value: ttsSpeed,
-                min: 0.2,
-                max: 1.0,
-                divisions: 4,
-                label: ttsSpeed == 0.2
-                    ? 'Çok Yavaş'
-                    : ttsSpeed == 0.4
-                    ? 'Yavaş'
-                    : ttsSpeed == 0.6
-                    ? 'Normal'
-                    : ttsSpeed == 0.8
-                    ? 'Hızlı'
-                    : ttsSpeed == 1.0
-                    ? 'Çok Hızlı'
-                    : 'Normal',
-                activeColor: AppColors.primary,
-                onChanged: (val) {
-                  setState(() => ttsSpeed = val);
-                },
-                onChangeEnd: (val) {
-                  _saveSettings();
+              const Text('Ses açık', style: TextStyle(fontSize: 20)),
+              Switch(
+                value: AppSettings.soundEnabled,
+                activeThumbColor: AppColors.primary,
+                onChanged: (val) async {
+                  await AppSettings.setSoundEnabled(val);
+                  if (mounted) setState(() {});
                 },
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 12),
+          const Text('Konuşma Hızı', style: TextStyle(fontSize: 20)),
+          Slider(
+            value: AppSettings.ttsSpeed,
+            min: 0.2,
+            max: 1.0,
+            divisions: 4,
+            label: switch (AppSettings.ttsSpeed) {
+              <= 0.2 => 'Çok Yavaş',
+              <= 0.4 => 'Yavaş',
+              <= 0.6 => 'Normal',
+              <= 0.8 => 'Hızlı',
+              _ => 'Çok Hızlı',
+            },
+            activeColor: AppColors.primary,
+            onChanged: (val) => setState(() => AppSettings.ttsSpeed = val),
+            onChangeEnd: (val) => AppSettings.setTtsSpeed(val),
+          ),
+
+          const SizedBox(height: 28),
+
+          // ---------------- Kayıt işleme ----------------
+          _baslik('Kayıt işleme'),
+          const Text(
+            'Bu ayarlar hem Kelimeler hem Alıştırmalar modülünde geçerlidir '
+                '— ikisi de aynı API ucuna gittiği için preprocessing birebir '
+                'aynı olmalı.',
+            style: TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          const SizedBox(height: 18),
+
+          const Text('Klip dolgusu (ms)', style: TextStyle(fontSize: 20)),
+          const SizedBox(height: 4),
+          const Text(
+            'Kayıt konuşma bölgesine kırpılır, iki yanına bu kadar '
+                'sessizlik eklenir. Düşük değerde "sabun, şapka" gibi '
+                'kelimelerin başındaki /s/ ve /ş/ kırpılabilir — bu seslerin '
+                'enerjisi ünlülerden çok düşük olduğu için konuşma başlangıcı '
+                'geç işaretlenir. Şüphedeyseniz 300 ms deneyin.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _padController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    filled: true,
+                    fillColor: Colors.white,
+                    suffixText: 'ms',
+                    errorText: _padError,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onSubmitted: _applyPad,
+                ),
+              ),
+              const SizedBox(width: 12),
+              GradientButton(
+                label: 'Kaydet',
+                width: 110,
+                height: 48,
+                fontSize: 16,
+                onPressed: () => _applyPad(_padController.text),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [0, 150, 250, 300, 500]
+                .map(
+                  (v) => ActionChip(
+                label: Text('$v'),
+                backgroundColor: AppSettings.clipPadMs == v
+                    ? AppColors.surfaceLight
+                    : Colors.white,
+                onPressed: () {
+                  _padController.text = v.toString();
+                  _applyPad(v.toString());
+                },
+              ),
+            )
+                .toList(),
+          ),
+
+          const SizedBox(height: 24),
+
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: AppSettings.normalizeAudio,
+            activeThumbColor: AppColors.primary,
+            title: const Text(
+              'Ses normalizasyonu',
+              style: TextStyle(fontSize: 20),
+            ),
+            subtitle: const Text(
+              'Gönderimden önce dalga formunu tepe değerine göre ölçekler. '
+                  'Modelin kendi öznitelik çıkarıcısı zaten klip başına '
+                  'normalizasyon yaptığı için etkisi genelde küçüktür; çok '
+                  'kısık kaydeden cihazlarda denemeye değer.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            onChanged: (val) async {
+              await AppSettings.setNormalizeAudio(val);
+              if (mounted) setState(() {});
+            },
+          ),
+
+          const SizedBox(height: 28),
+
+          // ---------------- Eşikler ----------------
+          _baslik('Ses algılama eşikleri'),
+          const Text(
+            'Kayıt sabit süreli değil: konuşma başlayınca kaydeder, bitince '
+                'keser. Bu üç değer o kararı verir. Ayarlamadan önce konsolu '
+                'açın — her kayıttan sonra "KAYIT ... peak=-XX.XdB" satırı '
+                'yazılır, tek işe yarayan sayı odur.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Başlangıç eşiği', style: TextStyle(fontSize: 18)),
+              Text(
+                '${AppSettings.speechStartDb.toStringAsFixed(0)} dBFS',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryDark,
+                ),
+              ),
+            ],
+          ),
+          const Text(
+            'Sık "tekrar dene" alıyorsanız düşürün (peak değeri bu eşiğin '
+                'altında kalıyordur). Sessizlikte kendiliğinden başlıyorsa '
+                'yükseltin.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          Slider(
+            value: AppSettings.speechStartDb,
+            min: -50,
+            max: -5,
+            divisions: 45,
+            activeColor: AppColors.primary,
+            label: '${AppSettings.speechStartDb.toStringAsFixed(0)} dB',
+            onChanged: (v) => setState(() {
+              AppSettings.speechStartDb = v;
+              AppSettings.enforceHysteresis();
+            }),
+            onChangeEnd: (v) async {
+              await AppSettings.setSpeechStartDb(v);
+              if (mounted) setState(() {});
+            },
+          ),
+
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Bitiş eşiği', style: TextStyle(fontSize: 18)),
+              Text(
+                '${AppSettings.speechEndDb.toStringAsFixed(0)} dBFS',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryDark,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            'Başlangıçtan en az 4 dB düşük tutulur (şu an '
+                '${(AppSettings.speechStartDb - AppSettings.speechEndDb).toStringAsFixed(0)} dB '
+                'fark). Bu boşluk olmazsa kelime ortasındaki kısa sessizlikte '
+                'kayıt bölünür.',
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          Slider(
+            value: AppSettings.speechEndDb,
+            min: -60,
+            max: -8,
+            divisions: 52,
+            activeColor: AppColors.primary,
+            label: '${AppSettings.speechEndDb.toStringAsFixed(0)} dB',
+            onChanged: (v) => setState(() {
+              AppSettings.speechEndDb = v;
+              AppSettings.enforceHysteresis();
+            }),
+            onChangeEnd: (v) async {
+              await AppSettings.setSpeechEndDb(v);
+              if (mounted) setState(() {});
+            },
+          ),
+
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Kesme sessizliği', style: TextStyle(fontSize: 18)),
+              Text(
+                '${AppSettings.trailingSilenceMs} ms',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryDark,
+                ),
+              ),
+            ],
+          ),
+          const Text(
+            'Konuşma bittikten sonra bu kadar sessizlik görülünce kayıt '
+                'durur. Kelimeler yarım kalıyorsa artırın.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          Slider(
+            value: AppSettings.trailingSilenceMs.toDouble(),
+            min: 150,
+            max: 1200,
+            divisions: 21,
+            activeColor: AppColors.primary,
+            label: '${AppSettings.trailingSilenceMs} ms',
+            onChanged: (v) =>
+                setState(() => AppSettings.trailingSilenceMs = v.round()),
+            onChangeEnd: (v) async {
+              await AppSettings.setTrailingSilenceMs(v.round());
+              if (mounted) setState(() {});
+            },
+          ),
+
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.restart_alt),
+            label: const Text('Kayıt ayarlarını sıfırla'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primaryDark,
+              side: const BorderSide(color: AppColors.primary),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            onPressed: () async {
+              await AppSettings.resetRecording();
+              if (!mounted) return;
+              _padController.text = AppSettings.clipPadMs.toString();
+              setState(() => _padError = null);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Varsayılanlara döndü'),
+                  duration: Duration(milliseconds: 1200),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 24),
+          _baslik('Sabitler'),
+          _bilgiSatiri(
+            'Maksimum konuşma',
+            '${kMaxSpeechDuration.inMilliseconds} ms',
+          ),
+          _bilgiSatiri(
+            'Konuşma yoksa vazgeç',
+            '${kNoSpeechTimeout.inMilliseconds} ms',
+          ),
+          _bilgiSatiri('Örnekleme', '16 kHz mono WAV'),
+          _bilgiSatiri('Sunucu', Config.apiIp),
+          const SizedBox(height: 30),
+        ],
       ),
     );
   }
+
+  Widget _baslik(String s) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      s,
+      style: const TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+        color: AppColors.primaryDark,
+      ),
+    ),
+  );
+
+  Widget _bilgiSatiri(String k, String v) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 3),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(k, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+        Text(
+          v,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 // ============================================================
