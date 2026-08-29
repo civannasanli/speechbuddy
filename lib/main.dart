@@ -200,15 +200,22 @@ class AppSettings {
 }
 
 // Ses dosyasını modele gönderir — hem BolumPlayPage hem AlistirmalarPage kullanır.
-Future<Map<String, dynamic>> sendPronunciationToApi(String filePath) async {
+/// Çocuk cevabı beklerken kullanılan zaman aşımı. Arka plan gönderiminde
+/// 15 saniye sorun değildi; artık ekranda bekleyen bir çocuk var ve bu
+/// süre boyunca hiçbir şey olmuyor. Cevap gelmezse deneme hakkı yakmadan
+/// "tekrar deneyelim" deniyor.
+const Duration kBeklerkenTimeout = Duration(seconds: 6);
+
+Future<Map<String, dynamic>> sendPronunciationToApi(
+  String filePath, {
+  Duration timeout = const Duration(seconds: 15),
+}) async {
   try {
     final uri = Uri.parse(Config.apiUrl);
     final request = http.MultipartRequest('POST', uri);
     request.files.add(await http.MultipartFile.fromPath('file', filePath));
 
-    final streamedResponse = await request.send().timeout(
-      const Duration(seconds: 15),
-    );
+    final streamedResponse = await request.send().timeout(timeout);
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200) {
@@ -596,10 +603,14 @@ class SmartRecorder {
 // ============================================================
 
 class Sfx {
-  static const String wordDone = 'sesler/yildiz.wav';
-  static const String tripletDone = 'sesler/alkis.wav';
-  static const String sectionDone = 'sesler/bitti.wav';
-  static const String tekrar = 'sesler/tekrar.wav';
+  // DİKKAT: buradaki adlar assets/sesler/ altında GERÇEKTEN bulunan
+  // dosyalar olmalı. Eskiden yildiz.wav / alkis.wav / bitti.wav /
+  // tekrar.wav çalınmaya çalışılıyordu; dördü de projede yok, bu yüzden
+  // uygulama açıldığından beri tek bir efekt sesi çıkmamıştı (hata
+  // aşağıdaki catch içinde sessizce yutuluyor).
+  static const String dogru = 'sesler/dogru.m4a';
+  static const String yanlis = 'sesler/yanlis.mp3';
+  static const String tamamlandi = 'sesler/tamamlandi.mp3';
 
   /// Efektler kısa ve üst üste binebiliyor; havuzdan boş player alınır.
   /// Tek player paylaşılırsa yeni efekt öncekini kesiyor.
@@ -664,6 +675,66 @@ Widget _doneTick(double size) {
 // ============================================================
 // Renk Paleti — canlı turuncu/pembe tema
 // ============================================================
+
+// ============================================================
+// Geri Bildirim — hocaların hazırladığı mesaj havuzu.
+// Tekdüze olmasın diye her seferinde rastgele seçiliyor; art arda
+// aynı mesajın gelmemesi için bir önceki seçim havuzdan eleniyor.
+// ============================================================
+
+class GeriBildirim {
+  static const List<String> dogruHavuz = [
+    'Harika gidiyorsun!',
+    'Süpersin!',
+    'Çok iyi söyledin!',
+    'İşte böyle!',
+    'Sesin harika çıkıyor!',
+    'Mükemmel iş çıkardın!',
+  ];
+
+  static const List<String> hataliHavuz = [
+    'Tekrar deneyelim mi?',
+    'Daha dikkatli olalım, bir daha dinle.',
+    'Hadi birlikte bir daha söyleyelim!',
+    'Çok yaklaştın, hadi tekrar!',
+    'Bir kez daha deneyebilirsin.',
+    'Dikkatlice dinle ve benim gibi yap.',
+  ];
+
+  /// Üçüncü deneme de tutmayınca. Havuzda değil — bu mesaj "tekrar dene"
+  /// demiyor, kelimeyi geçtiğimizi söylüyor.
+  static const String pesEt = 'Sonra bakalım!';
+
+  /// Ses hiç yakalanamadığında. Deneme hakkı yakmaz, o yüzden hata
+  /// havuzundan ayrı tutuluyor.
+  static const String duyamadim = 'Seni duyamadım, tekrar dener misin?';
+
+  static final Random _random = Random();
+  static String? _sonDogru;
+  static String? _sonHatali;
+
+  static String _sec(List<String> havuz, String? sonuncu) {
+    final secenekler = havuz.length > 1
+        ? havuz.where((m) => m != sonuncu).toList()
+        : havuz;
+    return secenekler[_random.nextInt(secenekler.length)];
+  }
+
+  static String dogruMesaj() {
+    final m = _sec(dogruHavuz, _sonDogru);
+    _sonDogru = m;
+    return m;
+  }
+
+  static String hataliMesaj() {
+    final m = _sec(hataliHavuz, _sonHatali);
+    _sonHatali = m;
+    return m;
+  }
+}
+
+/// Kelime başına verilen deneme hakkı.
+const int kMaxDeneme = 3;
 
 class AppColors {
   static const Color primary = Color(0xFFFF7A3D); // canlı turuncu
@@ -1628,8 +1699,20 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
   final FlutterTts _tts = FlutterTts();
   late final SmartRecorder _smart = SmartRecorder(_audioRecorder);
 
-  /// Gönderimi beklemeden ilerliyoruz; bekleyenler burada toplanır.
-  final List<Future<void>> _pending = [];
+  /// Bu kelimede harcanan deneme (0..kMaxDeneme). Ses yakalanamayan ve
+  /// sunucuya ulaşılamayan denemeler sayılmaz.
+  int _deneme = 0;
+
+  /// Model cevabı bekleniyor — çocuk bu sırada dokunamıyor.
+  bool _modelBekliyor = false;
+
+  /// Üst üste kaç kez sunucuya ulaşılamadı (bkz. _degerlendir).
+  int _baglantiHatasi = 0;
+
+  /// Ekranda duran geri bildirim. [_mesajDogru] null ise nötr (pes etme).
+  String? _mesaj;
+  bool? _mesajDogru;
+  Timer? _mesajTimer;
 
   bool showRetryHint = false;
   Timer? _retryHintTimer;
@@ -1647,7 +1730,6 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
   /// Ölçüm: istek süreleri ve özet ekranındaki bekleme.
   final List<int> _uploadMs = [];
   int? _finalWaitMs;
-  DateTime? _finalWaitStart;
 
   @override
   void initState() {
@@ -1688,7 +1770,9 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
   }
 
   Future<void> _onTap() async {
-    if (_busy || isRecording || finished || queue == null) return;
+    if (_busy || isRecording || _modelBekliyor || finished || queue == null) {
+      return;
+    }
     _busy = true;
     try {
       final word = queue![index]['word']!;
@@ -1731,61 +1815,182 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
       return;
     }
 
-    // Çubuk yerine yeşil tik — kırmızı çerçeve kalkmadan önce
-    // kısa bir onay anı, çocuk kaydın alındığını görsün.
+    // Değerlendirme modülüyle aynı: çocuk model cevabını bekliyor,
+    // doğru/yanlış bilgisi olmadan deneme hakkı işletilemez.
     setState(() {
       recordProgress = 1.0;
-      showDoneTick = true;
-    });
-
-    // Sonucu BEKLEMEDEN ilerle — cevap gelince slot güncellenir.
-    final slot = results.length;
-    results.add({
-      'word': word,
-      'correct': null,
-      'error': false,
-      'pending': true,
+      isRecording = false;
+      _modelBekliyor = true;
     });
 
     final t0 = DateTime.now();
-    final future = sendPronunciationToApi(rec.path!).then((result) {
-      _uploadMs.add(DateTime.now().difference(t0).inMilliseconds);
-      final isError = result['error'] == true;
-      final isPathological = !isError && result['is_pathological'] == true;
+    final result = await sendPronunciationToApi(
+      rec.path!,
+      timeout: kBeklerkenTimeout,
+    );
+    if (!mounted) return;
+    _uploadMs.add(DateTime.now().difference(t0).inMilliseconds);
+    setState(() => _modelBekliyor = false);
 
-      // Hata varsa geçmişe HİÇ yazma. Eskiden bağlantı koptuğunda
-      // "doğru telaffuz" olarak kaydediliyordu.
-      if (!isError) {
-        WordHistoryService.recordResult(
-          word: word,
-          isPathological: isPathological,
-        );
+    await _degerlendir(word, result);
+  }
+
+  // ------------------------------------------------------------
+  // Üç deneme: doğruysa geç, yanlışsa hak kaldıysa tekrar, bittiyse bırak.
+  // ------------------------------------------------------------
+  Future<void> _degerlendir(String word, Map<String, dynamic> result) async {
+    final hata = result['error'] == true;
+
+    // Sunucuya ulaşılamadı — çocuğun hatası değil, hak yanmıyor. Ama sunucu
+    // kapalıysa çocuk aynı resimde kilitlenir; üst üste kMaxDeneme hatadan
+    // sonra kelime geçilir ve geçmişe hiçbir şey yazılmaz.
+    if (hata) {
+      _baglantiHatasi++;
+      if (_baglantiHatasi < kMaxDeneme) {
+        await _mesajGoster(GeriBildirim.hataliMesaj(), dogru: false);
+        _kaydiTemizle();
+        return;
       }
+      _baglantiHatasi = 0;
+      await _mesajGoster(GeriBildirim.pesEt, dogru: null);
+      _kaydiTemizle();
+      _sonrakiKelime();
+      return;
+    }
 
-      if (!mounted) return;
-      setState(() {
-        results[slot] = {
-          'word': word,
-          'correct': !isError && !isPathological,
-          'error': isError,
-          'pending': false,
-        };
+    _baglantiHatasi = 0;
+    final hataliTelaffuz = result['is_pathological'] == true;
+    _deneme++;
+
+    if (!hataliTelaffuz) {
+      unawaited(Sfx.play(Sfx.dogru));
+      await _sonucuKaydet(word, result, dogru: true);
+      await _mesajGoster(GeriBildirim.dogruMesaj(), dogru: true);
+      _kaydiTemizle();
+      _sonrakiKelime();
+      return;
+    }
+
+    unawaited(Sfx.play(Sfx.yanlis, volume: 0.7));
+
+    if (_deneme < kMaxDeneme) {
+      await _mesajGoster(GeriBildirim.hataliMesaj(), dogru: false);
+      _kaydiTemizle();
+      return;
+    }
+
+    await _sonucuKaydet(word, result, dogru: false);
+    await _mesajGoster(GeriBildirim.pesEt, dogru: null);
+    _kaydiTemizle();
+    _sonrakiKelime();
+  }
+
+  /// Geçmişe ve özet listesine SADECE son sonuç yazılır.
+  Future<void> _sonucuKaydet(
+    String word,
+    Map<String, dynamic> result, {
+    required bool dogru,
+  }) async {
+    await WordHistoryService.recordResult(
+      word: word,
+      isPathological: !dogru,
+    );
+    if (!mounted) return;
+    setState(() {
+      results.add({
+        'word': word,
+        'correct': dogru,
+        'error': false,
+        'pending': false,
+        'deneme': _deneme,
       });
     });
-    _pending.add(future);
+  }
 
-    unawaited(Sfx.play(Sfx.wordDone));
+  Future<void> _mesajGoster(String mesaj, {required bool? dogru}) async {
+    if (!mounted) return;
+    setState(() {
+      _mesaj = mesaj;
+      _mesajDogru = dogru;
+    });
+    await _tts.speak(mesaj);
+    if (!mounted) return;
+    _mesajTimer?.cancel();
+    _mesajTimer = Timer(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _mesaj = null);
+    });
+  }
 
-    // Tik görünsün, sonra tek adımda temizle ve ilerle.
-    // (Ayrı timer + delayed ikilisi yarışıyordu; yeni resim bir kare
-    // boyunca yeşil çerçeveyle görünebiliyordu.)
-    await Future.delayed(const Duration(milliseconds: 550));
+  /// Geri bildirim bandı — yer her zaman ayrılıyor ki resim zıplamasın.
+  Widget _geriBildirimBandi() {
+    final mesaj = _mesaj;
+    final dogru = _mesajDogru;
+    final Color renk = dogru == null
+        ? const Color(0xFFC2185B)
+        : (dogru ? Colors.green.shade700 : const Color(0xFFB84A22));
+
+    return SizedBox(
+      height: 54,
+      child: AnimatedOpacity(
+        opacity: mesaj == null ? 0.0 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        child: mesaj == null
+            ? const SizedBox.shrink()
+            : Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: renk, width: 2),
+          ),
+          child: Text(
+            mesaj,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: renk,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Harcanan deneme hakkı — çocuk sayı okuyamıyor, üç nokta okuyor.
+  Widget _denemeNoktalari(int deneme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(kMaxDeneme, (i) {
+        final harcandi = i < deneme;
+        return Container(
+          width: 10,
+          height: 10,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: harcandi
+                ? const Color(0xFFE8623A)
+                : AppColors.surfaceLight,
+          ),
+        );
+      }),
+    );
+  }
+
+  void _kaydiTemizle() {
     if (!mounted) return;
     setState(() {
       showDoneTick = false;
       isRecording = false;
       recordProgress = 0.0;
     });
+  }
+
+  /// Sonraki kelimeye geçerken deneme sayacı sıfırlanır.
+  void _sonrakiKelime() {
+    _deneme = 0;
     _advance();
   }
 
@@ -1793,7 +1998,7 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
   /// Efekt tek başına yetmez — okuma bilmeyen yaştaki çocuk sadece bir
   /// "pop" duyunca ne yapacağını bilemez, o yüzden ikon da gösteriliyor.
   void _showRetry() {
-    unawaited(Sfx.play(Sfx.tekrar, volume: 0.7));
+    unawaited(Sfx.play(Sfx.yanlis, volume: 0.5));
     if (!mounted) return;
     setState(() => showRetryHint = true);
     _retryHintTimer?.cancel();
@@ -1807,24 +2012,20 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
     if (index < queue!.length - 1) {
       setState(() => index++);
     } else {
-      setState(() => finished = true);
-      // Son kelimede yalnızca bekleyen analizler toplanır.
-      _finalWaitStart = DateTime.now();
-      Future.wait(_pending).then((_) {
-        if (!mounted) return;
-        setState(() {
-          _finalWaitMs = _finalWaitStart == null
-              ? null
-              : DateTime.now().difference(_finalWaitStart!).inMilliseconds;
-        });
+      // Artık bekleyen analiz yok: her kelimenin sonucu, o kelime
+      // bitmeden önce geldi. Özet ekranı anında dolu açılıyor.
+      setState(() {
+        finished = true;
+        _finalWaitMs = 0;
       });
-      unawaited(Sfx.play(Sfx.sectionDone));
+      unawaited(Sfx.play(Sfx.tamamlandi));
     }
   }
 
   @override
   void dispose() {
     _retryHintTimer?.cancel();
+    _mesajTimer?.cancel();
     _smart.dispose();
     _audioRecorder.dispose();
     super.dispose();
@@ -1886,12 +2087,21 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Resme dokun ve kelimeyi tekrar oku!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            Text(
+              _modelBekliyor
+                  ? 'Dinliyorum...'
+                  : 'Resme dokun ve kelimeyi tekrar oku!',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 12),
+            _geriBildirimBandi(),
+            const SizedBox(height: 8),
+            _denemeNoktalari(_deneme),
+            const SizedBox(height: 20),
             Expanded(
               child: Center(
                 child: GestureDetector(
@@ -1929,6 +2139,26 @@ class _AlistirmalarPageState extends State<AlistirmalarPage> {
                                     ? Colors.green
                                     : Colors.red,
                                 width: 4,
+                              ),
+                            ),
+                          ),
+                        if (_modelBekliyor)
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white70,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            alignment: Alignment.center,
+                            child: SizedBox(
+                              width: 100,
+                              height: 100,
+                              child: Lottie.asset(
+                                'assets/lottie/cat_loader.lottie',
+                                repeat: true,
+                                errorBuilder: (c, e, s) =>
+                                    const CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ),
                           ),
@@ -2341,11 +2571,27 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   List<bool> completedTap = []; // mevcut triplet için, hangi resim kaydedildi
   List<String?> audioPaths = []; // global index -> ses dosya yolu
   List<Map<String, dynamic>?> apiResults = []; // global index -> model sonucu
-  final List<Future<void>> pendingUploads = [];
+
+  /// Kelime başına harcanan deneme (global index -> 0..kMaxDeneme).
+  /// Ses yakalanamayan ve sunucuya ulaşılamayan denemeler sayılmaz.
+  late List<int> denemeSayaci;
 
   bool isRecording = false;
   double recordProgress = 0.0;
   int? recordingGlobalIndex;
+
+  /// Model cevabı bekleniyor — çocuk bu sırada hiçbir şeye dokunamıyor.
+  bool _modelBekliyor = false;
+
+  /// Üst üste kaç kez sunucuya ulaşılamadı. Bağlantı hatası deneme hakkı
+  /// yakmaz, ama sunucu kapalıyken çocuğun aynı resimde kilitlenmemesi için
+  /// bu sayaç kMaxDeneme'ye ulaşınca kelime geçilir.
+  int _baglantiHatasi = 0;
+
+  /// Ekranda duran geri bildirim. [_mesajDogru] null ise nötr (pes etme).
+  String? _mesaj;
+  bool? _mesajDogru;
+  Timer? _mesajTimer;
 
   final AudioRecorder _audioRecorder = AudioRecorder();
   final FlutterTts _tts = FlutterTts();
@@ -2372,7 +2618,6 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   /// Ölçüm: her isteğin gidiş-dönüş süresi ve final ekranındaki bekleme.
   final List<int> _uploadMs = [];
   int? _finalWaitMs;
-  DateTime? _finalWaitStart;
 
   late String _cornerAnimalAsset;
 
@@ -2391,6 +2636,7 @@ class _BolumPlayPageState extends State<BolumPlayPage>
 
     audioPaths = List.filled(words.length, null);
     apiResults = List.filled(words.length, null);
+    denemeSayaci = List.filled(words.length, 0);
     completedTap = List.filled(triplets[0].length, false);
     _cornerAnimalAsset = CornerAnimals.pickRandom();
 
@@ -2460,7 +2706,9 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   // Resme dokununca: önce kelimeyi seslendir, sonra kaydı başlat
   // ------------------------------------------------------------
   Future<void> _onImageTap(int localIndex) async {
-    if (_busy || isRecording || completedTap[localIndex]) return;
+    if (_busy || isRecording || _modelBekliyor || completedTap[localIndex]) {
+      return;
+    }
     if (stage != _Stage.playing || _isTransitioning) return;
 
     _busy = true;
@@ -2510,34 +2758,133 @@ class _BolumPlayPageState extends State<BolumPlayPage>
       return;
     }
 
-    // Çubuk yerine yeşil tik — kısa bir onay anı.
+    audioPaths[globalIndex] = rec.path;
+
+    // Buradan itibaren çocuk model cevabını BEKLİYOR. Eskiden kayıt arka
+    // planda gidiyordu ve ekran hemen ilerliyordu; üç deneme sistemi
+    // doğru/yanlış bilgisini şimdi istediği için beklemek zorunlu.
     setState(() {
       recordProgress = 1.0;
-      showDoneTick = true;
-      completedTap[localIndex] = true;
+      isRecording = false;
+      _modelBekliyor = true;
     });
 
-    audioPaths[globalIndex] = rec.path;
-    _uploadInBackground(globalIndex, rec.path!);
+    final t0 = DateTime.now();
+    final result = await sendPronunciationToApi(
+      rec.path!,
+      timeout: kBeklerkenTimeout,
+    );
+    if (!mounted) return;
+    _uploadMs.add(DateTime.now().difference(t0).inMilliseconds);
 
-    unawaited(Sfx.play(Sfx.wordDone));
+    setState(() => _modelBekliyor = false);
+    await _degerlendir(globalIndex, localIndex, result);
+  }
 
-    _doneTickTimer?.cancel();
-    _doneTickTimer = Timer(const Duration(milliseconds: 550), () {
-      if (!mounted) return;
-      setState(() {
-        showDoneTick = false;
-        isRecording = false;
-        recordProgress = 0.0;
-        recordingGlobalIndex = null;
-      });
-      _checkTripletDone();
+  // ------------------------------------------------------------
+  // Model cevabına göre karar: doğruysa geç, yanlışsa tekrar hakkı ver,
+  // üçüncüde de olmazsa kelimeyi bırak.
+  // ------------------------------------------------------------
+  Future<void> _degerlendir(
+    int globalIndex,
+    int localIndex,
+    Map<String, dynamic> result,
+  ) async {
+    final hata = result['error'] == true;
+
+    // Sunucuya ulaşılamadı: bu çocuğun hatası değil, deneme hakkı yakmıyoruz.
+    // Ama sunucu tamamen kapalıysa hak da yanmadığı için çocuk aynı resimde
+    // sonsuza kadar takılır — üst üste kMaxDeneme hatadan sonra kelimeyi geç.
+    if (hata) {
+      _baglantiHatasi++;
+      if (_baglantiHatasi < kMaxDeneme) {
+        await _mesajGoster(GeriBildirim.hataliMesaj(), dogru: false);
+        _kaydiTemizle();
+        return;
+      }
+      // Sonuç bilinmiyor: geçmişe HİÇBİR ŞEY yazma, kelimeyi sadece geç.
+      _baglantiHatasi = 0;
+      setState(() => completedTap[localIndex] = true);
+      await _mesajGoster(GeriBildirim.pesEt, dogru: null);
+      _kaydiTemizle();
+      if (mounted) _checkTripletDone();
+      return;
+    }
+
+    _baglantiHatasi = 0;
+    final hataliTelaffuz = result['is_pathological'] == true;
+    denemeSayaci[globalIndex]++;
+
+    if (!hataliTelaffuz) {
+      apiResults[globalIndex] = result;
+      unawaited(Sfx.play(Sfx.dogru));
+      setState(() => completedTap[localIndex] = true);
+      await _sonucuYaz(globalIndex, result);
+      await _mesajGoster(GeriBildirim.dogruMesaj(), dogru: true);
+      _kaydiTemizle();
+      if (mounted) _checkTripletDone();
+      return;
+    }
+
+    unawaited(Sfx.play(Sfx.yanlis, volume: 0.7));
+
+    if (denemeSayaci[globalIndex] < kMaxDeneme) {
+      // Hak kaldı: kelime açık kalıyor, çocuk resme tekrar dokunacak.
+      await _mesajGoster(GeriBildirim.hataliMesaj(), dogru: false);
+      _kaydiTemizle();
+      return;
+    }
+
+    // Üç hak da bitti: sonucu yaz, kelimeyi geç.
+    apiResults[globalIndex] = result;
+    setState(() => completedTap[localIndex] = true);
+    await _sonucuYaz(globalIndex, result);
+    await _mesajGoster(GeriBildirim.pesEt, dogru: null);
+    _kaydiTemizle();
+    if (mounted) _checkTripletDone();
+  }
+
+  /// Geçmişe SADECE son sonuç yazılır — ara denemeler Veli Paneli'ndeki
+  /// başarı oranını olduğundan kötü gösterirdi.
+  Future<void> _sonucuYaz(
+    int globalIndex,
+    Map<String, dynamic> result,
+  ) async {
+    await WordHistoryService.recordResult(
+      word: words[globalIndex]['word']!,
+      isPathological: result['is_pathological'] == true,
+    );
+    await _sonuclariKaydet();
+  }
+
+  /// Mesajı ekranda göster ve sesli oku. Çocuk yazıyı okuyamıyor, o yüzden
+  /// geri bildirim TTS olmadan yarım kalır.
+  Future<void> _mesajGoster(String mesaj, {required bool? dogru}) async {
+    if (!mounted) return;
+    setState(() {
+      _mesaj = mesaj;
+      _mesajDogru = dogru;
+    });
+    await _tts.speak(mesaj);
+    if (!mounted) return;
+    _mesajTimer?.cancel();
+    _mesajTimer = Timer(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _mesaj = null);
+    });
+  }
+
+  void _kaydiTemizle() {
+    if (!mounted) return;
+    setState(() {
+      recordProgress = 0.0;
+      recordingGlobalIndex = null;
+      showDoneTick = false;
     });
   }
 
   /// Ses yakalanamadı: nötr efekt + görsel ipucu.
   void _showRetry() {
-    unawaited(Sfx.play(Sfx.tekrar, volume: 0.7));
+    unawaited(Sfx.play(Sfx.yanlis, volume: 0.5));
     if (!mounted) return;
     setState(() => showRetryHint = true);
     _retryHintTimer?.cancel();
@@ -2591,28 +2938,6 @@ class _BolumPlayPageState extends State<BolumPlayPage>
     );
   }
 
-  // ------------------------------------------------------------
-  // Ses dosyasını arka planda modele gönder (bekletmeden)
-  // ------------------------------------------------------------
-  void _uploadInBackground(int globalIndex, String path) {
-    final t0 = DateTime.now();
-    final future = sendPronunciationToApi(path).then((result) async {
-      _uploadMs.add(DateTime.now().difference(t0).inMilliseconds);
-      apiResults[globalIndex] = result;
-
-      // Geçmişe sonuç gelir gelmez yazılıyor: çocuk akışı yarıda bıraksa da
-      // o kelime Veli Paneli'ne ve Alıştırmalar'a giriyor.
-      if (result['error'] != true) {
-        await WordHistoryService.recordResult(
-          word: words[globalIndex]['word']!,
-          isPathological: result['is_pathological'] == true,
-        );
-      }
-      await _sonuclariKaydet();
-    });
-    pendingUploads.add(future);
-  }
-
   /// Eldeki model sonuçlarını diske yazar (sonuç geldikçe).
   Future<void> _sonuclariKaydet() async {
     final prefs = await SharedPreferences.getInstance();
@@ -2639,7 +2964,7 @@ class _BolumPlayPageState extends State<BolumPlayPage>
     final sonUclu = tripletIndex >= triplets.length - 1;
     final mola = AppWords.molaNoktalari.contains(bitenKelime);
 
-    unawaited(Sfx.play(Sfx.tripletDone));
+    unawaited(Sfx.play(Sfx.tamamlandi));
 
     if (!mola && !sonUclu) {
       // Ara üçlüler: kutlama yok, doğrudan geçiş.
@@ -2696,17 +3021,11 @@ class _BolumPlayPageState extends State<BolumPlayPage>
         stage = _Stage.final_;
         _isTransitioning = true;
       });
-      unawaited(Sfx.play(Sfx.sectionDone));
-      _finalWaitStart = DateTime.now();
-      Future.wait(pendingUploads).then((_) async {
-        if (!mounted) return;
-        setState(() {
-          _finalWaitMs = _finalWaitStart == null
-              ? null
-              : DateTime.now().difference(_finalWaitStart!).inMilliseconds;
-        });
-        await _saveSonuc();
-      });
+      unawaited(Sfx.play(Sfx.tamamlandi));
+      // Bekleyen gönderim kalmadı: her kelimenin sonucu, o kelime
+      // bitmeden önce geldi. Sonuç ekranı anında dolu açılıyor.
+      setState(() => _finalWaitMs = 0);
+      unawaited(_saveSonuc());
     }
 
     _transitionController.reset();
@@ -2717,7 +3036,7 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   }
 
   /// Akış bitti: yıldızı hesapla, tamamlandı işaretle, devam kaydını sil.
-  /// Kelime geçmişi sonuç geldikçe zaten yazıldı (bkz. _uploadInBackground).
+  /// Kelime geçmişi her kelime bitince zaten yazıldı (bkz. _sonucuYaz).
   Future<void> _saveSonuc() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -2738,6 +3057,7 @@ class _BolumPlayPageState extends State<BolumPlayPage>
   void dispose() {
     _encourageDelayTimer?.cancel();
     _retryHintTimer?.cancel();
+    _mesajTimer?.cancel();
     _doneTickTimer?.cancel();
     _smart.dispose();
     _confettiController.dispose();
@@ -2855,12 +3175,19 @@ class _BolumPlayPageState extends State<BolumPlayPage>
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Bir resme dokun ve kelimeyi oku!',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                Text(
+                  _modelBekliyor
+                      ? 'Dinliyorum...'
+                      : 'Bir resme dokun ve kelimeyi oku!',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 45),
+                const SizedBox(height: 12),
+                _geriBildirimBandi(),
+                const SizedBox(height: 20),
                 Expanded(
                   child: Align(
                     alignment: Alignment.topCenter,
@@ -2917,15 +3244,124 @@ class _BolumPlayPageState extends State<BolumPlayPage>
     final globalIndex = tripletOffsets[tripletIndex] + localIndex;
     final isDone = completedTap[localIndex];
     final isThisRecording = isRecording && recordingGlobalIndex == globalIndex;
+    final isBekleyen = _modelBekliyor && recordingGlobalIndex == globalIndex;
+
+    // Denenen kelime öne çıkar, diğer ikisi geri çekilir — üçlü düzen
+    // korunuyor ama çocuğun odağı tek kelimede kalıyor.
+    final aktif = isThisRecording || isBekleyen;
+    final baskasiCalisiyor =
+        (isRecording || _modelBekliyor) &&
+        recordingGlobalIndex != globalIndex;
+    final deneme = denemeSayaci[globalIndex];
 
     return GestureDetector(
       onTap: () => _onImageTap(localIndex),
-      child: SizedBox(
-        width: 170,
-        height: 170,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
+      child: AnimatedScale(
+        scale: aktif ? 1.18 : 1.0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        child: AnimatedOpacity(
+          opacity: baskasiCalisiyor ? 0.35 : 1.0,
+          duration: const Duration(milliseconds: 220),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _imageCardBody(
+                localIndex: localIndex,
+                tw: tw,
+                isDone: isDone,
+                isThisRecording: isThisRecording,
+                isBekleyen: isBekleyen,
+              ),
+              const SizedBox(height: 6),
+              _denemeNoktalari(
+                deneme,
+                dogruBitti: apiResults[globalIndex] != null &&
+                    apiResults[globalIndex]!['is_pathological'] != true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Geri bildirim bandı. Yer her zaman ayrılıyor (mesaj yokken şeffaf) —
+  /// yoksa mesaj gelip gidince resimler zıplıyor.
+  Widget _geriBildirimBandi() {
+    final mesaj = _mesaj;
+    final dogru = _mesajDogru;
+
+    final Color renk = dogru == null
+        ? const Color(0xFFC2185B)
+        : (dogru ? Colors.green.shade700 : const Color(0xFFB84A22));
+
+    return SizedBox(
+      height: 54,
+      child: AnimatedOpacity(
+        opacity: mesaj == null ? 0.0 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        child: mesaj == null
+            ? const SizedBox.shrink()
+            : Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: renk, width: 2),
+          ),
+          child: Text(
+            mesaj,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: renk,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Kalan deneme hakkı — çocuk sayı okuyamıyor, üç nokta okuyor.
+  /// Doğru bilindiyse son harcanan nokta yeşil, değilse hepsi kırmızı.
+  Widget _denemeNoktalari(int deneme, {required bool dogruBitti}) {
+    final basarili = dogruBitti && deneme > 0;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(kMaxDeneme, (i) {
+        final harcandi = i < deneme;
+        final sonVeBasarili = basarili && i == deneme - 1;
+        return Container(
+          width: 9,
+          height: 9,
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: !harcandi
+                ? AppColors.surfaceLight
+                : (sonVeBasarili ? Colors.green : const Color(0xFFE8623A)),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _imageCardBody({
+    required int localIndex,
+    required List<Map<String, String>> tw,
+    required bool isDone,
+    required bool isThisRecording,
+    required bool isBekleyen,
+  }) {
+    return SizedBox(
+      width: 170,
+      height: 170,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.asset(
@@ -2983,8 +3419,32 @@ class _BolumPlayPageState extends State<BolumPlayPage>
                   ),
                 ),
               ),
-          ],
-        ),
+            // Model cevabı beklenirken kart boş kalmasın — çocuk bir şeyin
+            // olduğunu görmezse tekrar tekrar dokunmaya çalışıyor.
+            if (isBekleyen)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white70,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Center(
+                    child: SizedBox(
+                      width: 84,
+                      height: 84,
+                      child: Lottie.asset(
+                        'assets/lottie/cat_loader.lottie',
+                        repeat: true,
+                        errorBuilder: (c, e, s) =>
+                            const CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+        ],
       ),
     );
   }

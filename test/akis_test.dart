@@ -51,4 +51,64 @@ void main() {
     }
     expect(AppWords.imageForWord('bulunmayankelime'), isNull);
   });
+
+  test('deneme hakkı 3', () {
+    expect(kMaxDeneme, 3);
+  });
+
+  test('geri bildirim havuzları hocaların tablosuyla birebir', () {
+    expect(GeriBildirim.dogruHavuz, [
+      'Harika gidiyorsun!',
+      'Süpersin!',
+      'Çok iyi söyledin!',
+      'İşte böyle!',
+      'Sesin harika çıkıyor!',
+      'Mükemmel iş çıkardın!',
+    ]);
+    expect(GeriBildirim.hataliHavuz, [
+      'Tekrar deneyelim mi?',
+      'Daha dikkatli olalım, bir daha dinle.',
+      'Hadi birlikte bir daha söyleyelim!',
+      'Çok yaklaştın, hadi tekrar!',
+      'Bir kez daha deneyebilirsin.',
+      'Dikkatlice dinle ve benim gibi yap.',
+    ]);
+    expect(GeriBildirim.pesEt, 'Sonra bakalım!');
+  });
+
+  test('aynı mesaj art arda iki kez gelmiyor', () {
+    String? once;
+    for (int i = 0; i < 300; i++) {
+      final m = GeriBildirim.dogruMesaj();
+      expect(GeriBildirim.dogruHavuz, contains(m));
+      expect(m, isNot(once), reason: 'aynı övgü art arda tekrarlandı');
+      once = m;
+    }
+    once = null;
+    for (int i = 0; i < 300; i++) {
+      final m = GeriBildirim.hataliMesaj();
+      expect(GeriBildirim.hataliHavuz, contains(m));
+      expect(m, isNot(once), reason: 'aynı hata mesajı art arda tekrarlandı');
+      once = m;
+    }
+  });
+
+  test('havuzdaki tüm mesajlar zamanla çıkıyor', () {
+    final gorulen = <String>{};
+    for (int i = 0; i < 500; i++) {
+      gorulen.add(GeriBildirim.dogruMesaj());
+    }
+    expect(gorulen.length, GeriBildirim.dogruHavuz.length);
+  });
+
+  // Bu test bir hatayı yakalamak için var: Sfx sınıfı uzun süre
+  // projede olmayan dosyaları (yildiz.wav, alkis.wav, bitti.wav,
+  // tekrar.wav) çalmaya çalıştı. Hata catch içinde yutulduğu için
+  // hiç ses çıkmadığı fark edilmemişti.
+  test('her ses efekti diskte gerçekten var', () {
+    for (final asset in [Sfx.dogru, Sfx.yanlis, Sfx.tamamlandi]) {
+      final yol = 'assets/$asset';
+      expect(File(yol).existsSync(), isTrue, reason: '$yol bulunamadı');
+    }
+  });
 }
