@@ -1,0 +1,6991 @@
+{
+ "sesler": [
+  {
+   "harf": "B",
+   "slug": "b",
+   "yonerge": "Dudaklarını birbirine bastır, ağzını havayla doldur ve dudaklarını açarak 'bum' diye patlat.",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ba",
+       "gorsel": null
+      },
+      {
+       "metin": "bı",
+       "gorsel": null
+      },
+      {
+       "metin": "bo",
+       "gorsel": null
+      },
+      {
+       "metin": "bu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "be",
+       "gorsel": null
+      },
+      {
+       "metin": "bi",
+       "gorsel": null
+      },
+      {
+       "metin": "bö",
+       "gorsel": null
+      },
+      {
+       "metin": "bü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aba",
+       "gorsel": null
+      },
+      {
+       "metin": "ıbı",
+       "gorsel": null
+      },
+      {
+       "metin": "obo",
+       "gorsel": null
+      },
+      {
+       "metin": "ubu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ebe",
+       "gorsel": null
+      },
+      {
+       "metin": "ibi",
+       "gorsel": null
+      },
+      {
+       "metin": "öbö",
+       "gorsel": null
+      },
+      {
+       "metin": "übü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "bal",
+       "gorsel": "assets/terapi/b/bal.webp"
+      },
+      {
+       "metin": "buz",
+       "gorsel": "assets/terapi/b/buz.webp"
+      },
+      {
+       "metin": "bot",
+       "gorsel": "assets/terapi/b/bot.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "balık",
+       "gorsel": "assets/terapi/b/balik.webp"
+      },
+      {
+       "metin": "burun",
+       "gorsel": "assets/terapi/b/burun.webp"
+      },
+      {
+       "metin": "bayrak",
+       "gorsel": "assets/terapi/b/bayrak.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "biberon",
+       "gorsel": "assets/terapi/b/biberon.webp"
+      },
+      {
+       "metin": "bezelye",
+       "gorsel": "assets/terapi/b/bezelye.webp"
+      },
+      {
+       "metin": "bisiklet",
+       "gorsel": "assets/terapi/b/bisiklet.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "sabun",
+       "gorsel": "assets/terapi/b/sabun.webp"
+      },
+      {
+       "metin": "tabak",
+       "gorsel": "assets/terapi/b/tabak.webp"
+      },
+      {
+       "metin": "robot",
+       "gorsel": "assets/terapi/b/robot.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "araba",
+       "gorsel": "assets/terapi/b/araba.webp"
+      },
+      {
+       "metin": "elbise",
+       "gorsel": "assets/terapi/b/elbise.webp"
+      },
+      {
+       "metin": "kelebek",
+       "gorsel": "assets/terapi/b/kelebek.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "kurbağa",
+       "gorsel": "assets/terapi/b/kurbaga.webp"
+      },
+      {
+       "metin": "otobüs",
+       "gorsel": "assets/terapi/b/otobus.webp"
+      },
+      {
+       "metin": "leblebi",
+       "gorsel": "assets/terapi/b/leblebi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "pembe bisiklet",
+       "gorsel": "assets/terapi/b/pembe_bisiklet.webp"
+      },
+      {
+       "metin": "ballı kurabiye",
+       "gorsel": "assets/terapi/b/balli_kurabiye.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "benekli balık",
+       "gorsel": "assets/terapi/b/benekli_balik.webp"
+      },
+      {
+       "metin": "balerin babeti",
+       "gorsel": "assets/terapi/b/balerin_babeti.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "bozuk araba",
+       "gorsel": "assets/terapi/b/bozuk_araba.webp"
+      },
+      {
+       "metin": "büyük balina",
+       "gorsel": "assets/terapi/b/buyuk_balina.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Buse balıkları besliyor.",
+       "gorsel": "assets/terapi/b/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Berke basketbol oynuyor.",
+       "gorsel": "assets/terapi/b/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Kurbağa bataklıkta zıplıyor.",
+       "gorsel": "assets/terapi/b/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Kübra pembe elbiseyi beğendi.",
+       "gorsel": "assets/terapi/b/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Ebru kumbarada para biriktiriyor.",
+       "gorsel": "assets/terapi/b/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Berfin boncuktan bileklik yapıyor.",
+       "gorsel": "assets/terapi/b/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/b/yonerge.webp"
+  },
+  {
+   "harf": "P",
+   "slug": "p",
+   "yonerge": "Dudaklarını birbirine bastır, ağzını havayla doldur ve dudaklarını açarak 'puf' diye patlat.",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "pa",
+       "gorsel": null
+      },
+      {
+       "metin": "pı",
+       "gorsel": null
+      },
+      {
+       "metin": "po",
+       "gorsel": null
+      },
+      {
+       "metin": "pu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "pe",
+       "gorsel": null
+      },
+      {
+       "metin": "pi",
+       "gorsel": null
+      },
+      {
+       "metin": "pö",
+       "gorsel": null
+      },
+      {
+       "metin": "pü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "apa",
+       "gorsel": null
+      },
+      {
+       "metin": "ıpı",
+       "gorsel": null
+      },
+      {
+       "metin": "opo",
+       "gorsel": null
+      },
+      {
+       "metin": "upu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "epe",
+       "gorsel": null
+      },
+      {
+       "metin": "ipi",
+       "gorsel": null
+      },
+      {
+       "metin": "öpö",
+       "gorsel": null
+      },
+      {
+       "metin": "üpü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "pil",
+       "gorsel": "assets/terapi/p/pil.webp"
+      },
+      {
+       "metin": "park",
+       "gorsel": "assets/terapi/p/park.webp"
+      },
+      {
+       "metin": "pis",
+       "gorsel": "assets/terapi/p/pis.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "pizza",
+       "gorsel": "assets/terapi/p/pizza.webp"
+      },
+      {
+       "metin": "pasta",
+       "gorsel": "assets/terapi/p/pasta.webp"
+      },
+      {
+       "metin": "panda",
+       "gorsel": "assets/terapi/p/panda.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "portakal",
+       "gorsel": "assets/terapi/p/portakal.webp"
+      },
+      {
+       "metin": "piyano",
+       "gorsel": "assets/terapi/p/piyano.webp"
+      },
+      {
+       "metin": "palyaço",
+       "gorsel": "assets/terapi/p/palyaco.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "sepet",
+       "gorsel": "assets/terapi/p/sepet.webp"
+      },
+      {
+       "metin": "yaprak",
+       "gorsel": "assets/terapi/p/yaprak.webp"
+      },
+      {
+       "metin": "şapka",
+       "gorsel": "assets/terapi/p/sapka.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "köpek",
+       "gorsel": "assets/terapi/p/kopek.webp"
+      },
+      {
+       "metin": "pipet",
+       "gorsel": "assets/terapi/p/pipet.webp"
+      },
+      {
+       "metin": "kapı",
+       "gorsel": "assets/terapi/p/kapi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "ahtapot",
+       "gorsel": "assets/terapi/p/ahtapot.webp"
+      },
+      {
+       "metin": "süpürge",
+       "gorsel": "assets/terapi/p/supurge.webp"
+      },
+      {
+       "metin": "papağan",
+       "gorsel": "assets/terapi/p/papagan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "kalp",
+       "gorsel": "assets/terapi/p/kalp.webp"
+      },
+      {
+       "metin": "top",
+       "gorsel": "assets/terapi/p/top.webp"
+      },
+      {
+       "metin": "çöp",
+       "gorsel": "assets/terapi/p/cop.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "sincap",
+       "gorsel": "assets/terapi/p/sincap.webp"
+      },
+      {
+       "metin": "kitap",
+       "gorsel": "assets/terapi/p/kitap.webp"
+      },
+      {
+       "metin": "çorap",
+       "gorsel": "assets/terapi/p/corap.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "teleskop",
+       "gorsel": "assets/terapi/p/teleskop.webp"
+      },
+      {
+       "metin": "lolipop",
+       "gorsel": "assets/terapi/p/lolipop.webp"
+      },
+      {
+       "metin": "mikroskop",
+       "gorsel": "assets/terapi/p/mikroskop.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "piknik sepeti",
+       "gorsel": "assets/terapi/p/piknik_sepeti.webp"
+      },
+      {
+       "metin": "portakallı pasta",
+       "gorsel": "assets/terapi/p/portakalli_pasta.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "çöp poşeti",
+       "gorsel": "assets/terapi/p/cop_poseti.webp"
+      },
+      {
+       "metin": "polis köpeği",
+       "gorsel": "assets/terapi/p/polis_kopegi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "şapkalı penguen",
+       "gorsel": "assets/terapi/p/sapkali_penguen.webp"
+      },
+      {
+       "metin": "Pamuk Prenses",
+       "gorsel": "assets/terapi/p/pamuk_prenses.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Polat piknik yapıyor.",
+       "gorsel": "assets/terapi/p/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Poyraz pizza pişiriyor.",
+       "gorsel": "assets/terapi/p/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Palyaçonun topu patladı.",
+       "gorsel": "assets/terapi/p/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "İpek portakallı pasta yapıyor.",
+       "gorsel": "assets/terapi/p/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Alp papatyanın yapraklarını koparıyor.",
+       "gorsel": "assets/terapi/p/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çöpçü pis çöpleri topluyor.",
+       "gorsel": "assets/terapi/p/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/p/yonerge.webp"
+  },
+  {
+   "harf": "M",
+   "slug": "m",
+   "yonerge": "Dudaklarını birbirine nazikçe yapıştır ve sakın açma. Çok sevdiğin bir dondurmayı görmüşsün gibi burnundan uzun bir 'Mmmm' sesi çıkar.",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ma",
+       "gorsel": null
+      },
+      {
+       "metin": "mı",
+       "gorsel": null
+      },
+      {
+       "metin": "mo",
+       "gorsel": null
+      },
+      {
+       "metin": "mu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "me",
+       "gorsel": null
+      },
+      {
+       "metin": "mi",
+       "gorsel": null
+      },
+      {
+       "metin": "mö",
+       "gorsel": null
+      },
+      {
+       "metin": "mü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ama",
+       "gorsel": null
+      },
+      {
+       "metin": "ımı",
+       "gorsel": null
+      },
+      {
+       "metin": "omo",
+       "gorsel": null
+      },
+      {
+       "metin": "umu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "eme",
+       "gorsel": null
+      },
+      {
+       "metin": "imi",
+       "gorsel": null
+      },
+      {
+       "metin": "ömö",
+       "gorsel": null
+      },
+      {
+       "metin": "ümü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "muz",
+       "gorsel": "assets/terapi/m/muz.webp"
+      },
+      {
+       "metin": "mum",
+       "gorsel": "assets/terapi/m/mum.webp"
+      },
+      {
+       "metin": "mont",
+       "gorsel": "assets/terapi/m/mont.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "masa",
+       "gorsel": "assets/terapi/m/masa.webp"
+      },
+      {
+       "metin": "maymun",
+       "gorsel": "assets/terapi/m/maymun.webp"
+      },
+      {
+       "metin": "mısır",
+       "gorsel": "assets/terapi/m/misir.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "merdiven",
+       "gorsel": "assets/terapi/m/merdiven.webp"
+      },
+      {
+       "metin": "makarna",
+       "gorsel": "assets/terapi/m/makarna.webp"
+      },
+      {
+       "metin": "mandalina",
+       "gorsel": "assets/terapi/m/mandalina.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "kamyon",
+       "gorsel": "assets/terapi/m/kamyon.webp"
+      },
+      {
+       "metin": "simit",
+       "gorsel": "assets/terapi/m/simit.webp"
+      },
+      {
+       "metin": "gemi",
+       "gorsel": "assets/terapi/m/gemi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "timsah",
+       "gorsel": "assets/terapi/m/timsah.webp"
+      },
+      {
+       "metin": "armut",
+       "gorsel": "assets/terapi/m/armut.webp"
+      },
+      {
+       "metin": "yağmur",
+       "gorsel": "assets/terapi/m/yagmur.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "uçurtma",
+       "gorsel": "assets/terapi/m/ucurtma.webp"
+      },
+      {
+       "metin": "dondurma",
+       "gorsel": "assets/terapi/m/dondurma.webp"
+      },
+      {
+       "metin": "pijama",
+       "gorsel": "assets/terapi/m/pijama.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "çam",
+       "gorsel": "assets/terapi/m/cam.webp"
+      },
+      {
+       "metin": "kum",
+       "gorsel": "assets/terapi/m/kum.webp"
+      },
+      {
+       "metin": "çim",
+       "gorsel": "assets/terapi/m/cim.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "üzüm",
+       "gorsel": "assets/terapi/m/uzum.webp"
+      },
+      {
+       "metin": "resim",
+       "gorsel": "assets/terapi/m/resim.webp"
+      },
+      {
+       "metin": "takvim",
+       "gorsel": "assets/terapi/m/takvim.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "kalem",
+       "gorsel": "assets/terapi/m/kalem.webp"
+      },
+      {
+       "metin": "ressam",
+       "gorsel": "assets/terapi/m/ressam.webp"
+      },
+      {
+       "metin": "akvaryum",
+       "gorsel": "assets/terapi/m/akvaryum.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "sevimli örümcek",
+       "gorsel": "assets/terapi/m/sevimli_orumcek.webp"
+      },
+      {
+       "metin": "kırmızı elma",
+       "gorsel": "assets/terapi/m/kirmizi_elma.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "maymunun muzu",
+       "gorsel": "assets/terapi/m/maymunun_muzu.webp"
+      },
+      {
+       "metin": "limonlu dondurma",
+       "gorsel": "assets/terapi/m/limonlu_dondurma.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "patlamış mısır",
+       "gorsel": "assets/terapi/m/patlamis_misir.webp"
+      },
+      {
+       "metin": "pijama takımı",
+       "gorsel": "assets/terapi/m/pijama_takimi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çamaşırlar makinede yıkanıyor.",
+       "gorsel": "assets/terapi/m/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Domatesleri kamyona yüklüyorum.",
+       "gorsel": "assets/terapi/m/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Marketten ekmek alıyorum.",
+       "gorsel": "assets/terapi/m/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Meyveleri mutfaktaki masaya koydum.",
+       "gorsel": "assets/terapi/m/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Mete mavi gemiden iniyor.",
+       "gorsel": "assets/terapi/m/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Manavdan kırmızı elma alıyorum.",
+       "gorsel": "assets/terapi/m/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/m/yonerge.webp"
+  },
+  {
+   "harf": "N",
+   "slug": "n",
+   "yonerge": "Dudaklarını 'ce-eee' yapar gibi aç ve gülümse. Dilinin ucunu üst dişlerinin hemen arkasındaki tümseğe yapıştır. Dilini oradan hiç ayırmadan burnundan 'Nnnnn' diye ses çıkar.",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "na",
+       "gorsel": null
+      },
+      {
+       "metin": "nı",
+       "gorsel": null
+      },
+      {
+       "metin": "no",
+       "gorsel": null
+      },
+      {
+       "metin": "nu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ne",
+       "gorsel": null
+      },
+      {
+       "metin": "ni",
+       "gorsel": null
+      },
+      {
+       "metin": "nö",
+       "gorsel": null
+      },
+      {
+       "metin": "nü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ana",
+       "gorsel": null
+      },
+      {
+       "metin": "ını",
+       "gorsel": null
+      },
+      {
+       "metin": "ono",
+       "gorsel": null
+      },
+      {
+       "metin": "unu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ene",
+       "gorsel": null
+      },
+      {
+       "metin": "ini",
+       "gorsel": null
+      },
+      {
+       "metin": "önö",
+       "gorsel": null
+      },
+      {
+       "metin": "ünü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "nar",
+       "gorsel": "assets/terapi/n/nar.webp"
+      },
+      {
+       "metin": "nal",
+       "gorsel": "assets/terapi/n/nal.webp"
+      },
+      {
+       "metin": "ney",
+       "gorsel": "assets/terapi/n/ney.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "nine",
+       "gorsel": "assets/terapi/n/nine.webp"
+      },
+      {
+       "metin": "nehir",
+       "gorsel": "assets/terapi/n/nehir.webp"
+      },
+      {
+       "metin": "nane",
+       "gorsel": "assets/terapi/n/nane.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "nilüfer",
+       "gorsel": "assets/terapi/n/nilufer.webp"
+      },
+      {
+       "metin": "narenciye",
+       "gorsel": "assets/terapi/n/narenciye.webp"
+      },
+      {
+       "metin": "nektarin",
+       "gorsel": "assets/terapi/n/nektarin.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "anne",
+       "gorsel": "assets/terapi/n/anne.webp"
+      },
+      {
+       "metin": "güneş",
+       "gorsel": "assets/terapi/n/gunes.webp"
+      },
+      {
+       "metin": "çanta",
+       "gorsel": "assets/terapi/n/canta.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "inek",
+       "gorsel": "assets/terapi/n/inek.webp"
+      },
+      {
+       "metin": "mantar",
+       "gorsel": "assets/terapi/n/mantar.webp"
+      },
+      {
+       "metin": "fındık",
+       "gorsel": "assets/terapi/n/findik.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "oyuncak",
+       "gorsel": "assets/terapi/n/oyuncak.webp"
+      },
+      {
+       "metin": "dinozor",
+       "gorsel": "assets/terapi/n/dinozor.webp"
+      },
+      {
+       "metin": "satranç",
+       "gorsel": "assets/terapi/n/satranc.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "balon",
+       "gorsel": "assets/terapi/n/balon.webp"
+      },
+      {
+       "metin": "koyun",
+       "gorsel": "assets/terapi/n/koyun.webp"
+      },
+      {
+       "metin": "tren",
+       "gorsel": "assets/terapi/n/tren.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "tavşan",
+       "gorsel": "assets/terapi/n/tavsan.webp"
+      },
+      {
+       "metin": "keman",
+       "gorsel": "assets/terapi/n/keman.webp"
+      },
+      {
+       "metin": "kaptan",
+       "gorsel": "assets/terapi/n/kaptan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "pantolon",
+       "gorsel": "assets/terapi/n/pantolon.webp"
+      },
+      {
+       "metin": "penguen",
+       "gorsel": "assets/terapi/n/penguen.webp"
+      },
+      {
+       "metin": "mikrofon",
+       "gorsel": "assets/terapi/n/mikrofon.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "penguenin pateni",
+       "gorsel": "assets/terapi/n/penguenin_pateni.webp"
+      },
+      {
+       "metin": "turuncu kamyon",
+       "gorsel": "assets/terapi/n/turuncu_kamyon.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "neşeli tavşan",
+       "gorsel": "assets/terapi/n/neseli_tavsan.webp"
+      },
+      {
+       "metin": "sincabın mantarı",
+       "gorsel": "assets/terapi/n/sincabin_mantari.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ninenin bastonu",
+       "gorsel": "assets/terapi/n/ninenin_bastonu.webp"
+      },
+      {
+       "metin": "vişneli dondurma",
+       "gorsel": "assets/terapi/n/visneli_dondurma.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Annemle limonata yapıyorum.",
+       "gorsel": "assets/terapi/n/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Nermin trene biniyor.",
+       "gorsel": "assets/terapi/n/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Ambulans hastaneye geldi.",
+       "gorsel": "assets/terapi/n/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Can manavdan nar alıyor.",
+       "gorsel": "assets/terapi/n/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Hakan koyunlarını çimenlerde otlatıyor.",
+       "gorsel": "assets/terapi/n/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Öğretmen öğrencileriyle piyano çalıyor.",
+       "gorsel": "assets/terapi/n/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/n/yonerge.webp"
+  },
+  {
+   "harf": "D",
+   "slug": "d",
+   "yonerge": "Dilinin ucunu, üst dişlerinin arkasındaki o küçük tümseğe yapıştır. Ses motorunu çalıştır (boğazın titresin) ve dilini aşağı doğru hızla iterek 'Dddd' diye ses çıkar.",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "da",
+       "gorsel": null
+      },
+      {
+       "metin": "dı",
+       "gorsel": null
+      },
+      {
+       "metin": "do",
+       "gorsel": null
+      },
+      {
+       "metin": "du",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "de",
+       "gorsel": null
+      },
+      {
+       "metin": "di",
+       "gorsel": null
+      },
+      {
+       "metin": "dö",
+       "gorsel": null
+      },
+      {
+       "metin": "dü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ada",
+       "gorsel": null
+      },
+      {
+       "metin": "ıdı",
+       "gorsel": null
+      },
+      {
+       "metin": "odo",
+       "gorsel": null
+      },
+      {
+       "metin": "udu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ede",
+       "gorsel": null
+      },
+      {
+       "metin": "idi",
+       "gorsel": null
+      },
+      {
+       "metin": "ödö",
+       "gorsel": null
+      },
+      {
+       "metin": "üdü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "dil",
+       "gorsel": "assets/terapi/d/dil.webp"
+      },
+      {
+       "metin": "diş",
+       "gorsel": "assets/terapi/d/dis.webp"
+      },
+      {
+       "metin": "dans",
+       "gorsel": "assets/terapi/d/dans.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "deve",
+       "gorsel": "assets/terapi/d/deve.webp"
+      },
+      {
+       "metin": "davul",
+       "gorsel": "assets/terapi/d/davul.webp"
+      },
+      {
+       "metin": "doktor",
+       "gorsel": "assets/terapi/d/doktor.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "dondurma",
+       "gorsel": "assets/terapi/d/dondurma.webp"
+      },
+      {
+       "metin": "dedektif",
+       "gorsel": "assets/terapi/d/dedektif.webp"
+      },
+      {
+       "metin": "domates",
+       "gorsel": "assets/terapi/d/domates.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "ördek",
+       "gorsel": "assets/terapi/d/ordek.webp"
+      },
+      {
+       "metin": "düdük",
+       "gorsel": "assets/terapi/d/duduk.webp"
+      },
+      {
+       "metin": "kedi",
+       "gorsel": "assets/terapi/d/kedi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "eldiven",
+       "gorsel": "assets/terapi/d/eldiven.webp"
+      },
+      {
+       "metin": "sandalye",
+       "gorsel": "assets/terapi/d/sandalye.webp"
+      },
+      {
+       "metin": "kaydırak",
+       "gorsel": "assets/terapi/d/kaydirak.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "hediye",
+       "gorsel": "assets/terapi/d/hediye.webp"
+      },
+      {
+       "metin": "arkadaş",
+       "gorsel": "assets/terapi/d/arkadas.webp"
+      },
+      {
+       "metin": "çaydanlık",
+       "gorsel": "assets/terapi/d/caydanlik.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "kardan adam",
+       "gorsel": "assets/terapi/d/kardan_adam.webp"
+      },
+      {
+       "metin": "deniz yıldızı",
+       "gorsel": "assets/terapi/d/deniz_yildizi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "dondurma dükkanı",
+       "gorsel": "assets/terapi/d/dondurma_dukkani.webp"
+      },
+      {
+       "metin": "dedenin sandalyesi",
+       "gorsel": "assets/terapi/d/dedenin_sandalyesi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "dönme dolap",
+       "gorsel": "assets/terapi/d/donme_dolap.webp"
+      },
+      {
+       "metin": "diş doktoru",
+       "gorsel": "assets/terapi/d/dis_doktoru.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Kedi minderde uyudu.",
+       "gorsel": "assets/terapi/d/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Dişçi dişini dolduruyor.",
+       "gorsel": "assets/terapi/d/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Dede radyo dinliyor.",
+       "gorsel": "assets/terapi/d/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Dalgıç derin denize daldı.",
+       "gorsel": "assets/terapi/d/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Davulcu düğünde davul çaldı.",
+       "gorsel": "assets/terapi/d/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Doğa arkadaşıyla deveye bindi.",
+       "gorsel": "assets/terapi/d/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/d/yonerge.webp"
+  },
+  {
+   "harf": "T",
+   "slug": "t",
+   "yonerge": "Dilinin ucunu üst dişlerinin arkasındaki küçük tepeye dokundur ve orada bekle. Şimdi ağzının içinde biriktirdiğin rüzgarı, dilini aniden aşağı çekerek 'Ttt' diye dışarı fırlat.",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ta",
+       "gorsel": null
+      },
+      {
+       "metin": "tı",
+       "gorsel": null
+      },
+      {
+       "metin": "to",
+       "gorsel": null
+      },
+      {
+       "metin": "tu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "te",
+       "gorsel": null
+      },
+      {
+       "metin": "ti",
+       "gorsel": null
+      },
+      {
+       "metin": "tö",
+       "gorsel": null
+      },
+      {
+       "metin": "tü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ata",
+       "gorsel": null
+      },
+      {
+       "metin": "ıtı",
+       "gorsel": null
+      },
+      {
+       "metin": "oto",
+       "gorsel": null
+      },
+      {
+       "metin": "utu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ete",
+       "gorsel": null
+      },
+      {
+       "metin": "iti",
+       "gorsel": null
+      },
+      {
+       "metin": "ötö",
+       "gorsel": null
+      },
+      {
+       "metin": "ütü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "taç",
+       "gorsel": "assets/terapi/t/tac.webp"
+      },
+      {
+       "metin": "tır",
+       "gorsel": "assets/terapi/t/tir.webp"
+      },
+      {
+       "metin": "top",
+       "gorsel": "assets/terapi/t/top.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "tavşan",
+       "gorsel": "assets/terapi/t/tavsan.webp"
+      },
+      {
+       "metin": "tenis",
+       "gorsel": "assets/terapi/t/tenis.webp"
+      },
+      {
+       "metin": "timsah",
+       "gorsel": "assets/terapi/t/timsah.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "tencere",
+       "gorsel": "assets/terapi/t/tencere.webp"
+      },
+      {
+       "metin": "telefon",
+       "gorsel": "assets/terapi/t/telefon.webp"
+      },
+      {
+       "metin": "televizyon",
+       "gorsel": "assets/terapi/t/televizyon.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "pasta",
+       "gorsel": "assets/terapi/t/pasta.webp"
+      },
+      {
+       "metin": "paten",
+       "gorsel": "assets/terapi/t/paten.webp"
+      },
+      {
+       "metin": "çanta",
+       "gorsel": "assets/terapi/t/canta.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "patates",
+       "gorsel": "assets/terapi/t/patates.webp"
+      },
+      {
+       "metin": "anahtar",
+       "gorsel": "assets/terapi/t/anahtar.webp"
+      },
+      {
+       "metin": "uçurtma",
+       "gorsel": "assets/terapi/t/ucurtma.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "süt",
+       "gorsel": "assets/terapi/t/sut.webp"
+      },
+      {
+       "metin": "şort",
+       "gorsel": "assets/terapi/t/sort.webp"
+      },
+      {
+       "metin": "tost",
+       "gorsel": "assets/terapi/t/tost.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "armut",
+       "gorsel": "assets/terapi/t/armut.webp"
+      },
+      {
+       "metin": "pilot",
+       "gorsel": "assets/terapi/t/pilot.webp"
+      },
+      {
+       "metin": "robot",
+       "gorsel": "assets/terapi/t/robot.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "paraşüt",
+       "gorsel": "assets/terapi/t/parasut.webp"
+      },
+      {
+       "metin": "ahtapot",
+       "gorsel": "assets/terapi/t/ahtapot.webp"
+      },
+      {
+       "metin": "labirent",
+       "gorsel": "assets/terapi/t/labirent.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "şeftalili yoğurt",
+       "gorsel": "assets/terapi/t/seftalili_yogurt.webp"
+      },
+      {
+       "metin": "basketbol topu",
+       "gorsel": "assets/terapi/t/basketbol_topu.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "lacivert tişört",
+       "gorsel": "assets/terapi/t/lacivert_tisort.webp"
+      },
+      {
+       "metin": "patates kızartması",
+       "gorsel": "assets/terapi/t/patates_kizartmasi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "çikolatalı pasta",
+       "gorsel": "assets/terapi/t/cikolatali_pasta.webp"
+      },
+      {
+       "metin": "tavada yumurta",
+       "gorsel": "assets/terapi/t/tavada_yumurta.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Futbol topu patladı.",
+       "gorsel": "assets/terapi/t/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Atın tüylerini tarıyor.",
+       "gorsel": "assets/terapi/t/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Terzi pantolonu ütülüyor.",
+       "gorsel": "assets/terapi/t/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Köfteyle patatesi tavada kızartıyor.",
+       "gorsel": "assets/terapi/t/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Tarlaya turp tohumu ekti.",
+       "gorsel": "assets/terapi/t/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Toprak bisikletini tamir etti.",
+       "gorsel": "assets/terapi/t/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/t/yonerge.webp"
+  },
+  {
+   "harf": "K",
+   "slug": "k",
+   "yonerge": "Ağzını kocaman aç. Dilini alt dişlerinin arkasına sakla. Şimdi boğazının arkasından sanki gıcık tutmuş gibi 'Kuh' diye öksür.",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ka",
+       "gorsel": null
+      },
+      {
+       "metin": "kı",
+       "gorsel": null
+      },
+      {
+       "metin": "ko",
+       "gorsel": null
+      },
+      {
+       "metin": "ku",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ke",
+       "gorsel": null
+      },
+      {
+       "metin": "ki",
+       "gorsel": null
+      },
+      {
+       "metin": "kö",
+       "gorsel": null
+      },
+      {
+       "metin": "kü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aka",
+       "gorsel": null
+      },
+      {
+       "metin": "ıkı",
+       "gorsel": null
+      },
+      {
+       "metin": "oko",
+       "gorsel": null
+      },
+      {
+       "metin": "uku",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "eke",
+       "gorsel": null
+      },
+      {
+       "metin": "iki",
+       "gorsel": null
+      },
+      {
+       "metin": "ökö",
+       "gorsel": null
+      },
+      {
+       "metin": "ükü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "kaz",
+       "gorsel": "assets/terapi/k/kaz.webp"
+      },
+      {
+       "metin": "kel",
+       "gorsel": "assets/terapi/k/kel.webp"
+      },
+      {
+       "metin": "kuş",
+       "gorsel": "assets/terapi/k/kus.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "kalem",
+       "gorsel": "assets/terapi/k/kalem.webp"
+      },
+      {
+       "metin": "küpe",
+       "gorsel": "assets/terapi/k/kupe.webp"
+      },
+      {
+       "metin": "kiraz",
+       "gorsel": "assets/terapi/k/kiraz.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "kanguru",
+       "gorsel": "assets/terapi/k/kanguru.webp"
+      },
+      {
+       "metin": "kurbağa",
+       "gorsel": "assets/terapi/k/kurbaga.webp"
+      },
+      {
+       "metin": "karınca",
+       "gorsel": "assets/terapi/k/karinca.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "asker",
+       "gorsel": "assets/terapi/k/asker.webp"
+      },
+      {
+       "metin": "baykuş",
+       "gorsel": "assets/terapi/k/baykus.webp"
+      },
+      {
+       "metin": "makas",
+       "gorsel": "assets/terapi/k/makas.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "ekmek",
+       "gorsel": "assets/terapi/k/ekmek.webp"
+      },
+      {
+       "metin": "şeker",
+       "gorsel": "assets/terapi/k/seker.webp"
+      },
+      {
+       "metin": "okul",
+       "gorsel": "assets/terapi/k/okul.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "çekirge",
+       "gorsel": "assets/terapi/k/cekirge.webp"
+      },
+      {
+       "metin": "pinokyo",
+       "gorsel": "assets/terapi/k/pinokyo.webp"
+      },
+      {
+       "metin": "korkuluk",
+       "gorsel": "assets/terapi/k/korkuluk.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "park",
+       "gorsel": "assets/terapi/k/park.webp"
+      },
+      {
+       "metin": "fok",
+       "gorsel": "assets/terapi/k/fok.webp"
+      },
+      {
+       "metin": "kek",
+       "gorsel": "assets/terapi/k/kek.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "gözlük",
+       "gorsel": "assets/terapi/k/gozluk.webp"
+      },
+      {
+       "metin": "çilek",
+       "gorsel": "assets/terapi/k/cilek.webp"
+      },
+      {
+       "metin": "köpek",
+       "gorsel": "assets/terapi/k/kopek.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "kelebek",
+       "gorsel": "assets/terapi/k/kelebek.webp"
+      },
+      {
+       "metin": "oyuncak",
+       "gorsel": "assets/terapi/k/oyuncak.webp"
+      },
+      {
+       "metin": "salıncak",
+       "gorsel": "assets/terapi/k/salincak.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "tavuk kümesi",
+       "gorsel": "assets/terapi/k/tavuk_kumesi.webp"
+      },
+      {
+       "metin": "kangurunun kesesi",
+       "gorsel": "assets/terapi/k/kangurunun_kesesi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "bulaşık makinesi",
+       "gorsel": "assets/terapi/k/bulasik_makinesi.webp"
+      },
+      {
+       "metin": "topuklu ayakkabı",
+       "gorsel": "assets/terapi/k/topuklu_ayakkabi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "çalışkan karınca",
+       "gorsel": "assets/terapi/k/caliskan_karinca.webp"
+      },
+      {
+       "metin": "benekli inek",
+       "gorsel": "assets/terapi/k/benekli_inek.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çocuk kızakla kayıyor.",
+       "gorsel": "assets/terapi/k/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Ekmekleri makinede kızartıyor.",
+       "gorsel": "assets/terapi/k/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Hikaye kitabı okuyor.",
+       "gorsel": "assets/terapi/k/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Berk piknikte karpuz kesiyor.",
+       "gorsel": "assets/terapi/k/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Kayra kırmızı kazağını katlıyor.",
+       "gorsel": "assets/terapi/k/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Kağan kaplumbağasıyla kaydıraktan kayıyor.",
+       "gorsel": "assets/terapi/k/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/k/yonerge.webp"
+  },
+  {
+   "harf": "G",
+   "slug": "g",
+   "yonerge": "Başını hafifçe arkaya yasla. Sanki ağzında su varmış da gargara yapıyormuşsun gibi, boğazını titreterek ses çıkar.",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ga",
+       "gorsel": null
+      },
+      {
+       "metin": "gı",
+       "gorsel": null
+      },
+      {
+       "metin": "go",
+       "gorsel": null
+      },
+      {
+       "metin": "gu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ge",
+       "gorsel": null
+      },
+      {
+       "metin": "gi",
+       "gorsel": null
+      },
+      {
+       "metin": "gö",
+       "gorsel": null
+      },
+      {
+       "metin": "gü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aga",
+       "gorsel": null
+      },
+      {
+       "metin": "ıgı",
+       "gorsel": null
+      },
+      {
+       "metin": "ogo",
+       "gorsel": null
+      },
+      {
+       "metin": "ugu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ege",
+       "gorsel": null
+      },
+      {
+       "metin": "igi",
+       "gorsel": null
+      },
+      {
+       "metin": "ögö",
+       "gorsel": null
+      },
+      {
+       "metin": "ügü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "gül",
+       "gorsel": "assets/terapi/g/gul.webp"
+      },
+      {
+       "metin": "göz",
+       "gorsel": "assets/terapi/g/goz.webp"
+      },
+      {
+       "metin": "göl",
+       "gorsel": "assets/terapi/g/gol.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "geyik",
+       "gorsel": "assets/terapi/g/geyik.webp"
+      },
+      {
+       "metin": "gömlek",
+       "gorsel": "assets/terapi/g/gomlek.webp"
+      },
+      {
+       "metin": "garson",
+       "gorsel": "assets/terapi/g/garson.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "gökkuşağı",
+       "gorsel": "assets/terapi/g/gokkusagi.webp"
+      },
+      {
+       "metin": "gazete",
+       "gorsel": "assets/terapi/g/gazete.webp"
+      },
+      {
+       "metin": "gelinlik",
+       "gorsel": "assets/terapi/g/gelinlik.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "yorgan",
+       "gorsel": "assets/terapi/g/yorgan.webp"
+      },
+      {
+       "metin": "silgi",
+       "gorsel": "assets/terapi/g/silgi.webp"
+      },
+      {
+       "metin": "dergi",
+       "gorsel": "assets/terapi/g/dergi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "yengeç",
+       "gorsel": "assets/terapi/g/yengec.webp"
+      },
+      {
+       "metin": "gölge",
+       "gorsel": "assets/terapi/g/golge.webp"
+      },
+      {
+       "metin": "mangal",
+       "gorsel": "assets/terapi/g/mangal.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "salyangoz",
+       "gorsel": "assets/terapi/g/salyangoz.webp"
+      },
+      {
+       "metin": "bilgisayar",
+       "gorsel": "assets/terapi/g/bilgisayar.webp"
+      },
+      {
+       "metin": "gergedan",
+       "gorsel": "assets/terapi/g/gergedan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "org",
+       "gorsel": "assets/terapi/g/org.webp"
+      },
+      {
+       "metin": "bovling",
+       "gorsel": "assets/terapi/g/bovling.webp"
+      },
+      {
+       "metin": "şezlong",
+       "gorsel": "assets/terapi/g/sezlong.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "çekirge",
+       "gorsel": "assets/terapi/g/cekirge.webp"
+      },
+      {
+       "metin": "süpürge",
+       "gorsel": "assets/terapi/g/supurge.webp"
+      },
+      {
+       "metin": "flamingo",
+       "gorsel": "assets/terapi/g/flamingo.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "garaj girişi",
+       "gorsel": "assets/terapi/g/garaj_girisi.webp"
+      },
+      {
+       "metin": "göbekli goril",
+       "gorsel": "assets/terapi/g/gobekli_goril.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "rengarenk gökkuşağı",
+       "gorsel": "assets/terapi/g/rengarenk_gokkusagi.webp"
+      },
+      {
+       "metin": "rüzgar gülü",
+       "gorsel": "assets/terapi/g/ruzgar_gulu.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "karganın gagası",
+       "gorsel": "assets/terapi/g/karganin_gagasi.webp"
+      },
+      {
+       "metin": "gazlı gazoz",
+       "gorsel": "assets/terapi/g/gazli_gazoz.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Garson gazoz getirdi.",
+       "gorsel": "assets/terapi/g/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Dalgıç göle giriyor.",
+       "gorsel": "assets/terapi/g/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Gaye sergiyi geziyor.",
+       "gorsel": "assets/terapi/g/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Görevli kanguruları gezginlere gösteriyor.",
+       "gorsel": "assets/terapi/g/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Gizem çizgili şezlongda güneşleniyor.",
+       "gorsel": "assets/terapi/g/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Güney gezegenleri, galaksileri gözlemliyor.",
+       "gorsel": "assets/terapi/g/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/g/yonerge.webp"
+  },
+  {
+   "harf": "F",
+   "slug": "f",
+   "yonerge": "Üst dişlerini alt dudağının üzerine nazikçe koy (Tıpkı bir tavşan gibi). Şimdi dişlerinin arasından dışarıya rüzgar üfle: Ffff!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "fa",
+       "gorsel": null
+      },
+      {
+       "metin": "fı",
+       "gorsel": null
+      },
+      {
+       "metin": "fo",
+       "gorsel": null
+      },
+      {
+       "metin": "fu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "fe",
+       "gorsel": null
+      },
+      {
+       "metin": "fi",
+       "gorsel": null
+      },
+      {
+       "metin": "fö",
+       "gorsel": null
+      },
+      {
+       "metin": "fü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "afa",
+       "gorsel": null
+      },
+      {
+       "metin": "ıfı",
+       "gorsel": null
+      },
+      {
+       "metin": "ofo",
+       "gorsel": null
+      },
+      {
+       "metin": "ufu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "efe",
+       "gorsel": null
+      },
+      {
+       "metin": "ifi",
+       "gorsel": null
+      },
+      {
+       "metin": "öfö",
+       "gorsel": null
+      },
+      {
+       "metin": "üfü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "fil",
+       "gorsel": "assets/terapi/f/fil.webp"
+      },
+      {
+       "metin": "fiş",
+       "gorsel": "assets/terapi/f/fis.webp"
+      },
+      {
+       "metin": "fön",
+       "gorsel": "assets/terapi/f/fon.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "fincan",
+       "gorsel": "assets/terapi/f/fincan.webp"
+      },
+      {
+       "metin": "fırça",
+       "gorsel": "assets/terapi/f/firca.webp"
+      },
+      {
+       "metin": "flüt",
+       "gorsel": "assets/terapi/f/flut.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "fermuar",
+       "gorsel": "assets/terapi/f/fermuar.webp"
+      },
+      {
+       "metin": "fırtına",
+       "gorsel": "assets/terapi/f/firtina.webp"
+      },
+      {
+       "metin": "futbolcu",
+       "gorsel": "assets/terapi/f/futbolcu.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "kafes",
+       "gorsel": "assets/terapi/f/kafes.webp"
+      },
+      {
+       "metin": "şoför",
+       "gorsel": "assets/terapi/f/sofor.webp"
+      },
+      {
+       "metin": "parfüm",
+       "gorsel": "assets/terapi/f/parfum.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "telefon",
+       "gorsel": "assets/terapi/f/telefon.webp"
+      },
+      {
+       "metin": "itfaiye",
+       "gorsel": "assets/terapi/f/itfaiye.webp"
+      },
+      {
+       "metin": "kuaför",
+       "gorsel": "assets/terapi/f/kuafor.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "lif",
+       "gorsel": "assets/terapi/f/lif.webp"
+      },
+      {
+       "metin": "tef",
+       "gorsel": "assets/terapi/f/tef.webp"
+      },
+      {
+       "metin": "sörf",
+       "gorsel": "assets/terapi/f/sorf.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "hedef",
+       "gorsel": "assets/terapi/f/hedef.webp"
+      },
+      {
+       "metin": "çarşaf",
+       "gorsel": "assets/terapi/f/carsaf.webp"
+      },
+      {
+       "metin": "sınıf",
+       "gorsel": "assets/terapi/f/sinif.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "dedektif",
+       "gorsel": "assets/terapi/f/dedektif.webp"
+      },
+      {
+       "metin": "fotoğraf",
+       "gorsel": "assets/terapi/f/fotograf.webp"
+      },
+      {
+       "metin": "lokomotif",
+       "gorsel": "assets/terapi/f/lokomotif.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "fırında köfte",
+       "gorsel": "assets/terapi/f/firinda_kofte.webp"
+      },
+      {
+       "metin": "raftaki fincan",
+       "gorsel": "assets/terapi/f/raftaki_fincan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "fırfırlı çarşaf",
+       "gorsel": "assets/terapi/f/firfirli_carsaf.webp"
+      },
+      {
+       "metin": "tarif defteri",
+       "gorsel": "assets/terapi/f/tarif_defteri.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "parfüm fabrikası",
+       "gorsel": "assets/terapi/f/parfum_fabrikasi.webp"
+      },
+      {
+       "metin": "telefon kılıfı",
+       "gorsel": "assets/terapi/f/telefon_kilifi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Şeftalileri fileye koyuyor.",
+       "gorsel": "assets/terapi/f/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çiftçi fareyi kovalıyor.",
+       "gorsel": "assets/terapi/f/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Filiz flüte üfledi.",
+       "gorsel": "assets/terapi/f/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Kuaför Fatma, fön çekiyor.",
+       "gorsel": "assets/terapi/f/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Fulya fayansları fırçayla fırçaladı.",
+       "gorsel": "assets/terapi/f/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Fotoğrafçı filin fotoğrafını çekiyor.",
+       "gorsel": "assets/terapi/f/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/f/yonerge.webp"
+  },
+  {
+   "harf": "V",
+   "slug": "v",
+   "yonerge": "Üst dişlerini alt dudağının üzerine hafifçe bastır. Şimdi ağzını hiç açmadan, dudağını titreterek 'Vvvvv' diye ses çıkar. Dudağın gıdıklanmalı!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "va",
+       "gorsel": null
+      },
+      {
+       "metin": "vı",
+       "gorsel": null
+      },
+      {
+       "metin": "vo",
+       "gorsel": null
+      },
+      {
+       "metin": "vu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ve",
+       "gorsel": null
+      },
+      {
+       "metin": "vi",
+       "gorsel": null
+      },
+      {
+       "metin": "vö",
+       "gorsel": null
+      },
+      {
+       "metin": "vü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ava",
+       "gorsel": null
+      },
+      {
+       "metin": "ıvı",
+       "gorsel": null
+      },
+      {
+       "metin": "ovo",
+       "gorsel": null
+      },
+      {
+       "metin": "uvu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "eve",
+       "gorsel": null
+      },
+      {
+       "metin": "ivi",
+       "gorsel": null
+      },
+      {
+       "metin": "övö",
+       "gorsel": null
+      },
+      {
+       "metin": "üvü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "vinç",
+       "gorsel": "assets/terapi/v/vinc.webp"
+      },
+      {
+       "metin": "vapur",
+       "gorsel": "assets/terapi/v/vapur.webp"
+      },
+      {
+       "metin": "vişne",
+       "gorsel": "assets/terapi/v/visne.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "vazo",
+       "gorsel": "assets/terapi/v/vazo.webp"
+      },
+      {
+       "metin": "valiz",
+       "gorsel": "assets/terapi/v/valiz.webp"
+      },
+      {
+       "metin": "vagon",
+       "gorsel": "assets/terapi/v/vagon.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "voleybol",
+       "gorsel": "assets/terapi/v/voleybol.webp"
+      },
+      {
+       "metin": "vitamin",
+       "gorsel": "assets/terapi/v/vitamin.webp"
+      },
+      {
+       "metin": "veteriner",
+       "gorsel": "assets/terapi/v/veteriner.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "kivi",
+       "gorsel": "assets/terapi/v/kivi.webp"
+      },
+      {
+       "metin": "kavun",
+       "gorsel": "assets/terapi/v/kavun.webp"
+      },
+      {
+       "metin": "ayva",
+       "gorsel": "assets/terapi/v/ayva.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "havlu",
+       "gorsel": "assets/terapi/v/havlu.webp"
+      },
+      {
+       "metin": "küvet",
+       "gorsel": "assets/terapi/v/kuvet.webp"
+      },
+      {
+       "metin": "tava",
+       "gorsel": "assets/terapi/v/tava.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "lavabo",
+       "gorsel": "assets/terapi/v/lavabo.webp"
+      },
+      {
+       "metin": "kravat",
+       "gorsel": "assets/terapi/v/kravat.webp"
+      },
+      {
+       "metin": "kahvaltı",
+       "gorsel": "assets/terapi/v/kahvalti.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "ev",
+       "gorsel": "assets/terapi/v/ev.webp"
+      },
+      {
+       "metin": "dev",
+       "gorsel": "assets/terapi/v/dev.webp"
+      },
+      {
+       "metin": "alev",
+       "gorsel": "assets/terapi/v/alev.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "şınav",
+       "gorsel": "assets/terapi/v/sinav.webp"
+      },
+      {
+       "metin": "pilav",
+       "gorsel": "assets/terapi/v/pilav.webp"
+      },
+      {
+       "metin": "ödev",
+       "gorsel": "assets/terapi/v/odev.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "sınav",
+       "gorsel": "assets/terapi/v/sinav_2.webp"
+      },
+      {
+       "metin": "civciv",
+       "gorsel": "assets/terapi/v/civciv.webp"
+      },
+      {
+       "metin": "manav",
+       "gorsel": "assets/terapi/v/manav.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "tavuklu pilav",
+       "gorsel": "assets/terapi/v/tavuklu_pilav.webp"
+      },
+      {
+       "metin": "kahverengi bavul",
+       "gorsel": "assets/terapi/v/kahverengi_bavul.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Hacivat’ın davulu",
+       "gorsel": "assets/terapi/v/hacivat_in_davulu.webp"
+      },
+      {
+       "metin": "kahvaltı vakti",
+       "gorsel": "assets/terapi/v/kahvalti_vakti.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "yavru güvercin",
+       "gorsel": "assets/terapi/v/yavru_guvercin.webp"
+      },
+      {
+       "metin": "ceviz çuvalı",
+       "gorsel": "assets/terapi/v/ceviz_cuvali.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Tavuk civcivleri seviyor.",
+       "gorsel": "assets/terapi/v/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Veli merdiven çıkıyor.",
+       "gorsel": "assets/terapi/v/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Tavşana havuç veriyor.",
+       "gorsel": "assets/terapi/v/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Davulcu Davut davula vuruyor.",
+       "gorsel": "assets/terapi/v/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Deve mavi kovayı devirdi.",
+       "gorsel": "assets/terapi/v/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Veteriner sevimli hayvanlara bakıyor.",
+       "gorsel": "assets/terapi/v/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/v/yonerge.webp"
+  },
+  {
+   "harf": "S",
+   "slug": "s",
+   "yonerge": "Kocaman gülümse. Dişlerini yavaşça birbirine değdir ve kapat. Dilini dişlerinin arkasına sakla. Şimdi dişlerinin arasından yavaşça üfle: Sssss!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "sa",
+       "gorsel": null
+      },
+      {
+       "metin": "sı",
+       "gorsel": null
+      },
+      {
+       "metin": "so",
+       "gorsel": null
+      },
+      {
+       "metin": "su",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "se",
+       "gorsel": null
+      },
+      {
+       "metin": "si",
+       "gorsel": null
+      },
+      {
+       "metin": "sö",
+       "gorsel": null
+      },
+      {
+       "metin": "sü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "asa",
+       "gorsel": null
+      },
+      {
+       "metin": "ısı",
+       "gorsel": null
+      },
+      {
+       "metin": "oso",
+       "gorsel": null
+      },
+      {
+       "metin": "usu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ese",
+       "gorsel": null
+      },
+      {
+       "metin": "isi",
+       "gorsel": null
+      },
+      {
+       "metin": "ösö",
+       "gorsel": null
+      },
+      {
+       "metin": "üsü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "su",
+       "gorsel": "assets/terapi/s/su.webp"
+      },
+      {
+       "metin": "süt",
+       "gorsel": "assets/terapi/s/sut.webp"
+      },
+      {
+       "metin": "saç",
+       "gorsel": "assets/terapi/s/sac.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "saat",
+       "gorsel": "assets/terapi/s/saat.webp"
+      },
+      {
+       "metin": "sinek",
+       "gorsel": "assets/terapi/s/sinek.webp"
+      },
+      {
+       "metin": "serçe",
+       "gorsel": "assets/terapi/s/serce.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "sarımsak",
+       "gorsel": "assets/terapi/s/sarimsak.webp"
+      },
+      {
+       "metin": "sürahi",
+       "gorsel": "assets/terapi/s/surahi.webp"
+      },
+      {
+       "metin": "solucan",
+       "gorsel": "assets/terapi/s/solucan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "tost",
+       "gorsel": "assets/terapi/s/tost.webp"
+      },
+      {
+       "metin": "kask",
+       "gorsel": "assets/terapi/s/kask.webp"
+      },
+      {
+       "metin": "test",
+       "gorsel": "assets/terapi/s/test.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "yastık",
+       "gorsel": "assets/terapi/s/yastik.webp"
+      },
+      {
+       "metin": "aslan",
+       "gorsel": "assets/terapi/s/aslan.webp"
+      },
+      {
+       "metin": "hostes",
+       "gorsel": "assets/terapi/s/hostes.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "pusula",
+       "gorsel": "assets/terapi/s/pusula.webp"
+      },
+      {
+       "metin": "postacı",
+       "gorsel": "assets/terapi/s/postaci.webp"
+      },
+      {
+       "metin": "yarasa",
+       "gorsel": "assets/terapi/s/yarasa.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "makas",
+       "gorsel": "assets/terapi/s/makas.webp"
+      },
+      {
+       "metin": "yunus",
+       "gorsel": "assets/terapi/s/yunus.webp"
+      },
+      {
+       "metin": "tenis",
+       "gorsel": "assets/terapi/s/tenis.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "ananas",
+       "gorsel": "assets/terapi/s/ananas.webp"
+      },
+      {
+       "metin": "domates",
+       "gorsel": "assets/terapi/s/domates.webp"
+      },
+      {
+       "metin": "prenses",
+       "gorsel": "assets/terapi/s/prenses.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "ambulans",
+       "gorsel": "assets/terapi/s/ambulans.webp"
+      },
+      {
+       "metin": "minibüs",
+       "gorsel": "assets/terapi/s/minibus.webp"
+      },
+      {
+       "metin": "otobüs",
+       "gorsel": "assets/terapi/s/otobus.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "sebze kasası",
+       "gorsel": "assets/terapi/s/sebze_kasasi.webp"
+      },
+      {
+       "metin": "su savaşı",
+       "gorsel": "assets/terapi/s/su_savasi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "polis arabası",
+       "gorsel": "assets/terapi/s/polis_arabasi.webp"
+      },
+      {
+       "metin": "korsan gemisi",
+       "gorsel": "assets/terapi/s/korsan_gemisi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "kestaneli pasta",
+       "gorsel": "assets/terapi/s/kestaneli_pasta.webp"
+      },
+      {
+       "metin": "susamlı simit",
+       "gorsel": "assets/terapi/s/susamli_simit.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Serkan testereyle kesiyor.",
+       "gorsel": "assets/terapi/s/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Senanur salıncakta sallanıyor.",
+       "gorsel": "assets/terapi/s/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Saksıdaki kaktüsü suluyor.",
+       "gorsel": "assets/terapi/s/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Sınıfta satranç yarışması yapıyorlar.",
+       "gorsel": "assets/terapi/s/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Prens prensesle dans ediyor.",
+       "gorsel": "assets/terapi/s/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Soner sosisli sandviç satıyor.",
+       "gorsel": "assets/terapi/s/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/s/yonerge.webp"
+  },
+  {
+   "harf": "Z",
+   "slug": "z",
+   "yonerge": "Kocaman gülümse. Dişlerini yavaşça birleştir. Dilini dişlerinin arkasına sakla. Şimdi boğazını titreştirerek arı gibi vızılda: Zzzzz!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "za",
+       "gorsel": null
+      },
+      {
+       "metin": "zı",
+       "gorsel": null
+      },
+      {
+       "metin": "zo",
+       "gorsel": null
+      },
+      {
+       "metin": "zu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ze",
+       "gorsel": null
+      },
+      {
+       "metin": "zi",
+       "gorsel": null
+      },
+      {
+       "metin": "zö",
+       "gorsel": null
+      },
+      {
+       "metin": "zü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aza",
+       "gorsel": null
+      },
+      {
+       "metin": "ızı",
+       "gorsel": null
+      },
+      {
+       "metin": "ozo",
+       "gorsel": null
+      },
+      {
+       "metin": "uzu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "eze",
+       "gorsel": null
+      },
+      {
+       "metin": "izi",
+       "gorsel": null
+      },
+      {
+       "metin": "özö",
+       "gorsel": null
+      },
+      {
+       "metin": "üzü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "zar",
+       "gorsel": "assets/terapi/z/zar.webp"
+      },
+      {
+       "metin": "zil",
+       "gorsel": "assets/terapi/z/zil.webp"
+      },
+      {
+       "metin": "zarf",
+       "gorsel": "assets/terapi/z/zarf.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "zincir",
+       "gorsel": "assets/terapi/z/zincir.webp"
+      },
+      {
+       "metin": "zebra",
+       "gorsel": "assets/terapi/z/zebra.webp"
+      },
+      {
+       "metin": "zımba",
+       "gorsel": "assets/terapi/z/zimba.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "zencefil",
+       "gorsel": "assets/terapi/z/zencefil.webp"
+      },
+      {
+       "metin": "zeytinlik",
+       "gorsel": "assets/terapi/z/zeytinlik.webp"
+      },
+      {
+       "metin": "zürafa",
+       "gorsel": "assets/terapi/z/zurafa.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "yüzük",
+       "gorsel": "assets/terapi/z/yuzuk.webp"
+      },
+      {
+       "metin": "kızak",
+       "gorsel": "assets/terapi/z/kizak.webp"
+      },
+      {
+       "metin": "çizme",
+       "gorsel": "assets/terapi/z/cizme.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "ranza",
+       "gorsel": "assets/terapi/z/ranza.webp"
+      },
+      {
+       "metin": "kuzu",
+       "gorsel": "assets/terapi/z/kuzu.webp"
+      },
+      {
+       "metin": "cüzdan",
+       "gorsel": "assets/terapi/z/cuzdan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "gezegen",
+       "gorsel": "assets/terapi/z/gezegen.webp"
+      },
+      {
+       "metin": "kozalak",
+       "gorsel": "assets/terapi/z/kozalak.webp"
+      },
+      {
+       "metin": "şempanze",
+       "gorsel": "assets/terapi/z/sempanze.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "tuz",
+       "gorsel": "assets/terapi/z/tuz.webp"
+      },
+      {
+       "metin": "bez",
+       "gorsel": "assets/terapi/z/bez.webp"
+      },
+      {
+       "metin": "diz",
+       "gorsel": "assets/terapi/z/diz.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "horoz",
+       "gorsel": "assets/terapi/z/horoz.webp"
+      },
+      {
+       "metin": "havuz",
+       "gorsel": "assets/terapi/z/havuz.webp"
+      },
+      {
+       "metin": "sakız",
+       "gorsel": "assets/terapi/z/sakiz.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "ıstakoz",
+       "gorsel": "assets/terapi/z/istakoz.webp"
+      },
+      {
+       "metin": "sihirbaz",
+       "gorsel": "assets/terapi/z/sihirbaz.webp"
+      },
+      {
+       "metin": "mayonez",
+       "gorsel": "assets/terapi/z/mayonez.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "çizgili kazak",
+       "gorsel": "assets/terapi/z/cizgili_kazak.webp"
+      },
+      {
+       "metin": "kırmızı çizme",
+       "gorsel": "assets/terapi/z/kirmizi_cizme.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "deniz kızı",
+       "gorsel": "assets/terapi/z/deniz_kizi.webp"
+      },
+      {
+       "metin": "bezelye kavanozu",
+       "gorsel": "assets/terapi/z/bezelye_kavanozu.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "yaz sezonu",
+       "gorsel": "assets/terapi/z/yaz_sezonu.webp"
+      },
+      {
+       "metin": "zeytinli pizza",
+       "gorsel": "assets/terapi/z/zeytinli_pizza.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Zeynep denizde yüzüyor.",
+       "gorsel": "assets/terapi/z/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Benzinlikten benzin alıyor.",
+       "gorsel": "assets/terapi/z/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Madenci kazmayla kazıyor.",
+       "gorsel": "assets/terapi/z/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Ziya buzda zor kayıyor.",
+       "gorsel": "assets/terapi/z/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Hizmetçi bezle temizlik yapıyor.",
+       "gorsel": "assets/terapi/z/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Zeki taze sebzeleri topluyor.",
+       "gorsel": "assets/terapi/z/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/z/yonerge.webp"
+  },
+  {
+   "harf": "Ş",
+   "slug": "sh",
+   "yonerge": "Dudaklarını öne doğru uzat ve yuvarlak yap (kocaman bir öpücük verir gibi). Dişlerini birbirine yaklaştır. Şimdi dudaklarının arasından güçlü bir rüzgar üfle: Şşşş!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "şa",
+       "gorsel": null
+      },
+      {
+       "metin": "şı",
+       "gorsel": null
+      },
+      {
+       "metin": "şo",
+       "gorsel": null
+      },
+      {
+       "metin": "şu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "şe",
+       "gorsel": null
+      },
+      {
+       "metin": "şi",
+       "gorsel": null
+      },
+      {
+       "metin": "şö",
+       "gorsel": null
+      },
+      {
+       "metin": "şü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aşa",
+       "gorsel": null
+      },
+      {
+       "metin": "ışı",
+       "gorsel": null
+      },
+      {
+       "metin": "oşo",
+       "gorsel": null
+      },
+      {
+       "metin": "uşu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "eşe",
+       "gorsel": null
+      },
+      {
+       "metin": "işi",
+       "gorsel": null
+      },
+      {
+       "metin": "öşö",
+       "gorsel": null
+      },
+      {
+       "metin": "üşü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "şort",
+       "gorsel": "assets/terapi/sh/sort.webp"
+      },
+      {
+       "metin": "şal",
+       "gorsel": "assets/terapi/sh/sal.webp"
+      },
+      {
+       "metin": "şişe",
+       "gorsel": "assets/terapi/sh/sise.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "şapka",
+       "gorsel": "assets/terapi/sh/sapka.webp"
+      },
+      {
+       "metin": "şoför",
+       "gorsel": "assets/terapi/sh/sofor.webp"
+      },
+      {
+       "metin": "şişman",
+       "gorsel": "assets/terapi/sh/sisman.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "şemsiye",
+       "gorsel": "assets/terapi/sh/semsiye.webp"
+      },
+      {
+       "metin": "şempanze",
+       "gorsel": "assets/terapi/sh/sempanze.webp"
+      },
+      {
+       "metin": "şampuan",
+       "gorsel": "assets/terapi/sh/sampuan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "tişört",
+       "gorsel": "assets/terapi/sh/tisort.webp"
+      },
+      {
+       "metin": "aşçı",
+       "gorsel": "assets/terapi/sh/asci.webp"
+      },
+      {
+       "metin": "çeşme",
+       "gorsel": "assets/terapi/sh/cesme.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "paraşüt",
+       "gorsel": "assets/terapi/sh/parasut.webp"
+      },
+      {
+       "metin": "hemşire",
+       "gorsel": "assets/terapi/sh/hemsire.webp"
+      },
+      {
+       "metin": "gökkuşağı",
+       "gorsel": "assets/terapi/sh/gokkusagi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "taş",
+       "gorsel": "assets/terapi/sh/tas.webp"
+      },
+      {
+       "metin": "diş",
+       "gorsel": "assets/terapi/sh/dis.webp"
+      },
+      {
+       "metin": "kış",
+       "gorsel": "assets/terapi/sh/kis.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "kardeş",
+       "gorsel": "assets/terapi/sh/kardes.webp"
+      },
+      {
+       "metin": "güneş",
+       "gorsel": "assets/terapi/sh/gunes.webp"
+      },
+      {
+       "metin": "baykuş",
+       "gorsel": "assets/terapi/sh/baykus.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "kalemtıraş",
+       "gorsel": "assets/terapi/sh/kalemtiras.webp"
+      },
+      {
+       "metin": "arkadaş",
+       "gorsel": "assets/terapi/sh/arkadas.webp"
+      },
+      {
+       "metin": "heykeltıraş",
+       "gorsel": "assets/terapi/sh/heykeltiras.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "koşu yarışı",
+       "gorsel": "assets/terapi/sh/kosu_yarisi.webp"
+      },
+      {
+       "metin": "vişneli şurup",
+       "gorsel": "assets/terapi/sh/visneli_surup.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "şekerlikteki şeker",
+       "gorsel": "assets/terapi/sh/sekerlikteki_seker.webp"
+      },
+      {
+       "metin": "duş başlığı",
+       "gorsel": "assets/terapi/sh/dus_basligi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "şapkadaki tavşan",
+       "gorsel": "assets/terapi/sh/sapkadaki_tavsan.webp"
+      },
+      {
+       "metin": "şarkıcı Şafak",
+       "gorsel": "assets/terapi/sh/sarkici_safak.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Şuheda dişlerini kaşıyor.",
+       "gorsel": "assets/terapi/sh/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Yıkanmış çamaşırları asıyor.",
+       "gorsel": "assets/terapi/sh/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Şükrü şarkı söylüyor.",
+       "gorsel": "assets/terapi/sh/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Şapkadan şaşkın tavşan çıkıyor.",
+       "gorsel": "assets/terapi/sh/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "İşçi inşaata taş taşıyor.",
+       "gorsel": "assets/terapi/sh/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Şeyma hemşire aşı yapıyor.",
+       "gorsel": "assets/terapi/sh/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/sh/yonerge.webp"
+  },
+  {
+   "harf": "J",
+   "slug": "j",
+   "yonerge": "Dudaklarını öne doğru uzat ve yuvarlak yap (kocaman bir öpücük verir gibi). Dişlerini birbirine yaklaştır. Şimdi boğazını titreterek güçlü bir ses çıkar: Jjjjj!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ja",
+       "gorsel": null
+      },
+      {
+       "metin": "jı",
+       "gorsel": null
+      },
+      {
+       "metin": "jo",
+       "gorsel": null
+      },
+      {
+       "metin": "ju",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "je",
+       "gorsel": null
+      },
+      {
+       "metin": "ji",
+       "gorsel": null
+      },
+      {
+       "metin": "jö",
+       "gorsel": null
+      },
+      {
+       "metin": "jü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aja",
+       "gorsel": null
+      },
+      {
+       "metin": "ıjı",
+       "gorsel": null
+      },
+      {
+       "metin": "ojo",
+       "gorsel": null
+      },
+      {
+       "metin": "uju",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "eje",
+       "gorsel": null
+      },
+      {
+       "metin": "iji",
+       "gorsel": null
+      },
+      {
+       "metin": "öjö",
+       "gorsel": null
+      },
+      {
+       "metin": "üjü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "jip",
+       "gorsel": "assets/terapi/j/jip.webp"
+      },
+      {
+       "metin": "jet",
+       "gorsel": "assets/terapi/j/jet.webp"
+      },
+      {
+       "metin": "jöle",
+       "gorsel": "assets/terapi/j/jole.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "jokey",
+       "gorsel": "assets/terapi/j/jokey.webp"
+      },
+      {
+       "metin": "judo",
+       "gorsel": "assets/terapi/j/judo.webp"
+      },
+      {
+       "metin": "jaguar",
+       "gorsel": "assets/terapi/j/jaguar.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "jelibon",
+       "gorsel": "assets/terapi/j/jelibon.webp"
+      },
+      {
+       "metin": "jandarma",
+       "gorsel": "assets/terapi/j/jandarma.webp"
+      },
+      {
+       "metin": "jakuzi",
+       "gorsel": "assets/terapi/j/jakuzi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "oje",
+       "gorsel": "assets/terapi/j/oje.webp"
+      },
+      {
+       "metin": "pijama",
+       "gorsel": "assets/terapi/j/pijama.webp"
+      },
+      {
+       "metin": "deterjan",
+       "gorsel": "assets/terapi/j/deterjan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "ejderha",
+       "gorsel": "assets/terapi/j/ejderha.webp"
+      },
+      {
+       "metin": "oksijen",
+       "gorsel": "assets/terapi/j/oksijen.webp"
+      },
+      {
+       "metin": "alerji",
+       "gorsel": "assets/terapi/j/alerji.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "ruj",
+       "gorsel": "assets/terapi/j/ruj.webp"
+      },
+      {
+       "metin": "plaj",
+       "gorsel": "assets/terapi/j/plaj.webp"
+      },
+      {
+       "metin": "masaj",
+       "gorsel": "assets/terapi/j/masaj.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "baraj",
+       "gorsel": "assets/terapi/j/baraj.webp"
+      },
+      {
+       "metin": "garaj",
+       "gorsel": "assets/terapi/j/garaj.webp"
+      },
+      {
+       "metin": "makyaj",
+       "gorsel": "assets/terapi/j/makyaj.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "mesaj",
+       "gorsel": "assets/terapi/j/mesaj.webp"
+      },
+      {
+       "metin": "ambalaj",
+       "gorsel": "assets/terapi/j/ambalaj.webp"
+      },
+      {
+       "metin": "kamuflaj",
+       "gorsel": "assets/terapi/j/kamuflaj.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "şarjlı abajur",
+       "gorsel": "assets/terapi/j/sarjli_abajur.webp"
+      },
+      {
+       "metin": "jipin bagajı",
+       "gorsel": "assets/terapi/j/jipin_bagaji.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ejderhalı pijama",
+       "gorsel": "assets/terapi/j/ejderhali_pijama.webp"
+      },
+      {
+       "metin": "hijyenik deterjan",
+       "gorsel": "assets/terapi/j/hijyenik_deterjan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "jokey Nejdet",
+       "gorsel": "assets/terapi/j/jokey_nejdet.webp"
+      },
+      {
+       "metin": "judocu Ajda",
+       "gorsel": "assets/terapi/j/judocu_ajda.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Jülide makyaj yapıyor.",
+       "gorsel": "assets/terapi/j/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Jale bileğini bandajlıyor.",
+       "gorsel": "assets/terapi/j/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Jip garajda duruyor.",
+       "gorsel": "assets/terapi/j/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Japon’un jelibona alerjisi var.",
+       "gorsel": "assets/terapi/j/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Müjgan judo, jimnastik yapıyor.",
+       "gorsel": "assets/terapi/j/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Nejat ile Tijen röportaj yapıyor.",
+       "gorsel": "assets/terapi/j/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/j/yonerge.webp"
+  },
+  {
+   "harf": "C",
+   "slug": "c",
+   "yonerge": "Dudaklarını öne doğru uzat (öpücük atar gibi). Dişlerini kapat. Şimdi boğazını titreterek ağzındaki havayı aniden patlat: Cccc!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ca",
+       "gorsel": null
+      },
+      {
+       "metin": "cı",
+       "gorsel": null
+      },
+      {
+       "metin": "co",
+       "gorsel": null
+      },
+      {
+       "metin": "cu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ce",
+       "gorsel": null
+      },
+      {
+       "metin": "ci",
+       "gorsel": null
+      },
+      {
+       "metin": "cö",
+       "gorsel": null
+      },
+      {
+       "metin": "cü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aca",
+       "gorsel": null
+      },
+      {
+       "metin": "ıcı",
+       "gorsel": null
+      },
+      {
+       "metin": "oco",
+       "gorsel": null
+      },
+      {
+       "metin": "ucu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ece",
+       "gorsel": null
+      },
+      {
+       "metin": "ici",
+       "gorsel": null
+      },
+      {
+       "metin": "öcö",
+       "gorsel": null
+      },
+      {
+       "metin": "ücü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "cam",
+       "gorsel": "assets/terapi/c/cam.webp"
+      },
+      {
+       "metin": "cep",
+       "gorsel": "assets/terapi/c/cep.webp"
+      },
+      {
+       "metin": "cin",
+       "gorsel": "assets/terapi/c/cin.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "cadı",
+       "gorsel": "assets/terapi/c/cadi.webp"
+      },
+      {
+       "metin": "cüce",
+       "gorsel": "assets/terapi/c/cuce.webp"
+      },
+      {
+       "metin": "ceket",
+       "gorsel": "assets/terapi/c/ceket.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "cetvel",
+       "gorsel": "assets/terapi/c/cetvel.webp"
+      },
+      {
+       "metin": "cezve",
+       "gorsel": "assets/terapi/c/cezve.webp"
+      },
+      {
+       "metin": "ceylan",
+       "gorsel": "assets/terapi/c/ceylan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "cüzdan",
+       "gorsel": "assets/terapi/c/cuzdan.webp"
+      },
+      {
+       "metin": "cambaz",
+       "gorsel": "assets/terapi/c/cambaz.webp"
+      },
+      {
+       "metin": "canavar",
+       "gorsel": "assets/terapi/c/canavar.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "baca",
+       "gorsel": "assets/terapi/c/baca.webp"
+      },
+      {
+       "metin": "böcek",
+       "gorsel": "assets/terapi/c/bocek.webp"
+      },
+      {
+       "metin": "ocak",
+       "gorsel": "assets/terapi/c/ocak.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "incir",
+       "gorsel": "assets/terapi/c/incir.webp"
+      },
+      {
+       "metin": "fincan",
+       "gorsel": "assets/terapi/c/fincan.webp"
+      },
+      {
+       "metin": "sincap",
+       "gorsel": "assets/terapi/c/sincap.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "macun",
+       "gorsel": "assets/terapi/c/macun.webp"
+      },
+      {
+       "metin": "cacık",
+       "gorsel": "assets/terapi/c/cacik.webp"
+      },
+      {
+       "metin": "tencere",
+       "gorsel": "assets/terapi/c/tencere.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "oyuncak",
+       "gorsel": "assets/terapi/c/oyuncak.webp"
+      },
+      {
+       "metin": "salıncak",
+       "gorsel": "assets/terapi/c/salincak.webp"
+      },
+      {
+       "metin": "öğrenci",
+       "gorsel": "assets/terapi/c/ogrenci.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "örümcek",
+       "gorsel": "assets/terapi/c/orumcek.webp"
+      },
+      {
+       "metin": "karınca",
+       "gorsel": "assets/terapi/c/karinca.webp"
+      },
+      {
+       "metin": "güvercin",
+       "gorsel": "assets/terapi/c/guvercin.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "lacivert gecelik",
+       "gorsel": "assets/terapi/c/lacivert_gecelik.webp"
+      },
+      {
+       "metin": "cesur kaleci",
+       "gorsel": "assets/terapi/c/cesur_kaleci.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "baloncu Cengiz",
+       "gorsel": "assets/terapi/c/baloncu_cengiz.webp"
+      },
+      {
+       "metin": "postacı güvercin",
+       "gorsel": "assets/terapi/c/postaci_guvercin.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "şekerci Cihan",
+       "gorsel": "assets/terapi/c/sekerci_cihan.webp"
+      },
+      {
+       "metin": "ocaktaki tencere",
+       "gorsel": "assets/terapi/c/ocaktaki_tencere.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Mercan oyuncakları inceliyor.",
+       "gorsel": "assets/terapi/c/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Ceketin cebini dikiyor.",
+       "gorsel": "assets/terapi/c/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Karınca ağaca çıkıyor.",
+       "gorsel": "assets/terapi/c/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çekici turuncu aracı çekiyor.",
+       "gorsel": "assets/terapi/c/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Ece’yi cırcır böceği ısırdı.",
+       "gorsel": "assets/terapi/c/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Caner düşünce bacağını incitti.",
+       "gorsel": "assets/terapi/c/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/c/yonerge.webp"
+  },
+  {
+   "harf": "Ç",
+   "slug": "ch",
+   "yonerge": "Dudaklarını öne doğru uzat (öpücük atar gibi). Dişlerini kapat. Şimdi ağzında biriktirdiğin havayı aniden dışarı fırlat: Çççç!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ça",
+       "gorsel": null
+      },
+      {
+       "metin": "çı",
+       "gorsel": null
+      },
+      {
+       "metin": "ço",
+       "gorsel": null
+      },
+      {
+       "metin": "çu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "çe",
+       "gorsel": null
+      },
+      {
+       "metin": "çi",
+       "gorsel": null
+      },
+      {
+       "metin": "çö",
+       "gorsel": null
+      },
+      {
+       "metin": "çü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aça",
+       "gorsel": null
+      },
+      {
+       "metin": "ıçı",
+       "gorsel": null
+      },
+      {
+       "metin": "oço",
+       "gorsel": null
+      },
+      {
+       "metin": "uçu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "eçe",
+       "gorsel": null
+      },
+      {
+       "metin": "içi",
+       "gorsel": null
+      },
+      {
+       "metin": "öçö",
+       "gorsel": null
+      },
+      {
+       "metin": "üçü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "çay",
+       "gorsel": "assets/terapi/ch/cay.webp"
+      },
+      {
+       "metin": "çam",
+       "gorsel": "assets/terapi/ch/cam.webp"
+      },
+      {
+       "metin": "çöp",
+       "gorsel": "assets/terapi/ch/cop.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "çorba",
+       "gorsel": "assets/terapi/ch/corba.webp"
+      },
+      {
+       "metin": "çadır",
+       "gorsel": "assets/terapi/ch/cadir.webp"
+      },
+      {
+       "metin": "çatal",
+       "gorsel": "assets/terapi/ch/catal.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "çerçeve",
+       "gorsel": "assets/terapi/ch/cerceve.webp"
+      },
+      {
+       "metin": "çırpıcı",
+       "gorsel": "assets/terapi/ch/cirpici.webp"
+      },
+      {
+       "metin": "çikolata",
+       "gorsel": "assets/terapi/ch/cikolata.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "bekçi",
+       "gorsel": "assets/terapi/ch/bekci.webp"
+      },
+      {
+       "metin": "uçak",
+       "gorsel": "assets/terapi/ch/ucak.webp"
+      },
+      {
+       "metin": "aşçı",
+       "gorsel": "assets/terapi/ch/asci.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "bıçak",
+       "gorsel": "assets/terapi/ch/bicak.webp"
+      },
+      {
+       "metin": "çiçek",
+       "gorsel": "assets/terapi/ch/cicek.webp"
+      },
+      {
+       "metin": "çiftçi",
+       "gorsel": "assets/terapi/ch/ciftci.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "uçurtma",
+       "gorsel": "assets/terapi/ch/ucurtma.webp"
+      },
+      {
+       "metin": "palyaço",
+       "gorsel": "assets/terapi/ch/palyaco.webp"
+      },
+      {
+       "metin": "bahçıvan",
+       "gorsel": "assets/terapi/ch/bahcivan.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "saç",
+       "gorsel": "assets/terapi/ch/sac.webp"
+      },
+      {
+       "metin": "taç",
+       "gorsel": "assets/terapi/ch/tac.webp"
+      },
+      {
+       "metin": "vinç",
+       "gorsel": "assets/terapi/ch/vinc.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "pirinç",
+       "gorsel": "assets/terapi/ch/pirinc.webp"
+      },
+      {
+       "metin": "havuç",
+       "gorsel": "assets/terapi/ch/havuc.webp"
+      },
+      {
+       "metin": "yengeç",
+       "gorsel": "assets/terapi/ch/yengec.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "dalgıç",
+       "gorsel": "assets/terapi/ch/dalgic.webp"
+      },
+      {
+       "metin": "satranç",
+       "gorsel": "assets/terapi/ch/satranc.webp"
+      },
+      {
+       "metin": "saklambaç",
+       "gorsel": "assets/terapi/ch/saklambac.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "inatçı keçi",
+       "gorsel": "assets/terapi/ch/inatci_keci.webp"
+      },
+      {
+       "metin": "çamurlu çizme",
+       "gorsel": "assets/terapi/ch/camurlu_cizme.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "çaydanlıktaki çay",
+       "gorsel": "assets/terapi/ch/caydanliktaki_cay.webp"
+      },
+      {
+       "metin": "çilekli çikolata",
+       "gorsel": "assets/terapi/ch/cilekli_cikolata.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ayçiçeği çekirdeği",
+       "gorsel": "assets/terapi/ch/aycicegi_cekirdegi.webp"
+      },
+      {
+       "metin": "palyaçonun saçı",
+       "gorsel": "assets/terapi/ch/palyaconun_saci.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çekiçle çivi çakıyor.",
+       "gorsel": "assets/terapi/ch/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çağla yengeçten kaçıyor.",
+       "gorsel": "assets/terapi/ch/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çetin çorba içiyor.",
+       "gorsel": "assets/terapi/ch/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çiğdemle Çınar uçurtma uçuruyor.",
+       "gorsel": "assets/terapi/ch/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Çocuklar büyüteçle çiçekleri inceliyor.",
+       "gorsel": "assets/terapi/ch/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Bahçıvan bahçedeki ağaçları suluyor.",
+       "gorsel": "assets/terapi/ch/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/ch/yonerge.webp"
+  },
+  {
+   "harf": "H",
+   "slug": "h",
+   "yonerge": "Ağzını kocaman aç. Dilini rahat bırak, aşağıda yatsın. Şimdi sanki ellerin üşümüş de onları ısıtmak istiyormuşsun gibi içindeki sıcak havayı dışarı üfle: Hhhhh!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ha",
+       "gorsel": null
+      },
+      {
+       "metin": "hı",
+       "gorsel": null
+      },
+      {
+       "metin": "ho",
+       "gorsel": null
+      },
+      {
+       "metin": "hu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "he",
+       "gorsel": null
+      },
+      {
+       "metin": "hi",
+       "gorsel": null
+      },
+      {
+       "metin": "hö",
+       "gorsel": null
+      },
+      {
+       "metin": "hü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aha",
+       "gorsel": null
+      },
+      {
+       "metin": "ıhı",
+       "gorsel": null
+      },
+      {
+       "metin": "oho",
+       "gorsel": null
+      },
+      {
+       "metin": "uhu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ehe",
+       "gorsel": null
+      },
+      {
+       "metin": "ihi",
+       "gorsel": null
+      },
+      {
+       "metin": "öhö",
+       "gorsel": null
+      },
+      {
+       "metin": "ühü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "hap",
+       "gorsel": "assets/terapi/h/hap.webp"
+      },
+      {
+       "metin": "harf",
+       "gorsel": "assets/terapi/h/harf.webp"
+      },
+      {
+       "metin": "hız",
+       "gorsel": "assets/terapi/h/hiz.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "halka",
+       "gorsel": "assets/terapi/h/halka.webp"
+      },
+      {
+       "metin": "hindi",
+       "gorsel": "assets/terapi/h/hindi.webp"
+      },
+      {
+       "metin": "hamsi",
+       "gorsel": "assets/terapi/h/hamsi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "hokkabaz",
+       "gorsel": "assets/terapi/h/hokkabaz.webp"
+      },
+      {
+       "metin": "hamburger",
+       "gorsel": "assets/terapi/h/hamburger.webp"
+      },
+      {
+       "metin": "hazine",
+       "gorsel": "assets/terapi/h/hazine.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "kahve",
+       "gorsel": "assets/terapi/h/kahve.webp"
+      },
+      {
+       "metin": "tahta",
+       "gorsel": "assets/terapi/h/tahta.webp"
+      },
+      {
+       "metin": "bahçe",
+       "gorsel": "assets/terapi/h/bahce.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "sihir",
+       "gorsel": "assets/terapi/h/sihir.webp"
+      },
+      {
+       "metin": "şahin",
+       "gorsel": "assets/terapi/h/sahin.webp"
+      },
+      {
+       "metin": "ahır",
+       "gorsel": "assets/terapi/h/ahir.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "ahududu",
+       "gorsel": "assets/terapi/h/ahududu.webp"
+      },
+      {
+       "metin": "ejderha",
+       "gorsel": "assets/terapi/h/ejderha.webp"
+      },
+      {
+       "metin": "kahraman",
+       "gorsel": "assets/terapi/h/kahraman.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "timsah",
+       "gorsel": "assets/terapi/h/timsah.webp"
+      },
+      {
+       "metin": "külah",
+       "gorsel": "assets/terapi/h/kulah.webp"
+      },
+      {
+       "metin": "sabah",
+       "gorsel": "assets/terapi/h/sabah.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "nikah",
+       "gorsel": "assets/terapi/h/nikah.webp"
+      },
+      {
+       "metin": "siyah",
+       "gorsel": "assets/terapi/h/siyah.webp"
+      },
+      {
+       "metin": "tesbih",
+       "gorsel": "assets/terapi/h/tesbih.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "bahçe hortumu",
+       "gorsel": "assets/terapi/h/bahce_hortumu.webp"
+      },
+      {
+       "metin": "horoz heykeli",
+       "gorsel": "assets/terapi/h/horoz_heykeli.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "hayvanat bahçesi",
+       "gorsel": "assets/terapi/h/hayvanat_bahcesi.webp"
+      },
+      {
+       "metin": "hazine haritası",
+       "gorsel": "assets/terapi/h/hazine_haritasi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "hastanın hapı",
+       "gorsel": "assets/terapi/h/hastanin_hapi.webp"
+      },
+      {
+       "metin": "tahin helvası",
+       "gorsel": "assets/terapi/h/tahin_helvasi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Heykeltıraş heykel hazırlıyor.",
+       "gorsel": "assets/terapi/h/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Hulk halteri kaldırıyor.",
+       "gorsel": "assets/terapi/h/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Kahvaltıya hamburger hazırlıyor.",
+       "gorsel": "assets/terapi/h/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Helikopter hızla sahaya indi.",
+       "gorsel": "assets/terapi/h/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Pahalı mücevher hediye ediyor.",
+       "gorsel": "assets/terapi/h/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Bahçıvan bahçeyi hortumla suluyor.",
+       "gorsel": "assets/terapi/h/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/h/yonerge.webp"
+  },
+  {
+   "harf": "Y",
+   "slug": "y",
+   "yonerge": "Hafifçe gülümse. Dilinin ortasını yukarı kaldır ama tavana değdirme. Şimdi sesini yumuşakça kaydırarak çıkar: Yyyyy!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ya",
+       "gorsel": null
+      },
+      {
+       "metin": "yı",
+       "gorsel": null
+      },
+      {
+       "metin": "yo",
+       "gorsel": null
+      },
+      {
+       "metin": "yu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ye",
+       "gorsel": null
+      },
+      {
+       "metin": "yi",
+       "gorsel": null
+      },
+      {
+       "metin": "yö",
+       "gorsel": null
+      },
+      {
+       "metin": "yü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aya",
+       "gorsel": null
+      },
+      {
+       "metin": "ıyı",
+       "gorsel": null
+      },
+      {
+       "metin": "oyo",
+       "gorsel": null
+      },
+      {
+       "metin": "uyu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "eye",
+       "gorsel": null
+      },
+      {
+       "metin": "iyi",
+       "gorsel": null
+      },
+      {
+       "metin": "öyö",
+       "gorsel": null
+      },
+      {
+       "metin": "üyü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "yorgan",
+       "gorsel": "assets/terapi/y/yorgan.webp"
+      },
+      {
+       "metin": "yatak",
+       "gorsel": "assets/terapi/y/yatak.webp"
+      },
+      {
+       "metin": "yastık",
+       "gorsel": "assets/terapi/y/yastik.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "yengeç",
+       "gorsel": "assets/terapi/y/yengec.webp"
+      },
+      {
+       "metin": "yunus",
+       "gorsel": "assets/terapi/y/yunus.webp"
+      },
+      {
+       "metin": "yemek",
+       "gorsel": "assets/terapi/y/yemek.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "yarasa",
+       "gorsel": "assets/terapi/y/yarasa.webp"
+      },
+      {
+       "metin": "yarışma",
+       "gorsel": "assets/terapi/y/yarisma.webp"
+      },
+      {
+       "metin": "yumurta",
+       "gorsel": "assets/terapi/y/yumurta.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "ayı",
+       "gorsel": "assets/terapi/y/ayi.webp"
+      },
+      {
+       "metin": "ayna",
+       "gorsel": "assets/terapi/y/ayna.webp"
+      },
+      {
+       "metin": "bayrak",
+       "gorsel": "assets/terapi/y/bayrak.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "kayak",
+       "gorsel": "assets/terapi/y/kayak.webp"
+      },
+      {
+       "metin": "koyun",
+       "gorsel": "assets/terapi/y/koyun.webp"
+      },
+      {
+       "metin": "meyve",
+       "gorsel": "assets/terapi/y/meyve.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "oyuncak",
+       "gorsel": "assets/terapi/y/oyuncak.webp"
+      },
+      {
+       "metin": "palyaço",
+       "gorsel": "assets/terapi/y/palyaco.webp"
+      },
+      {
+       "metin": "kaydırak",
+       "gorsel": "assets/terapi/y/kaydirak.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "yay",
+       "gorsel": "assets/terapi/y/yay.webp"
+      },
+      {
+       "metin": "çay",
+       "gorsel": "assets/terapi/y/cay.webp"
+      },
+      {
+       "metin": "tüy",
+       "gorsel": "assets/terapi/y/tuy.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "saray",
+       "gorsel": "assets/terapi/y/saray.webp"
+      },
+      {
+       "metin": "kaykay",
+       "gorsel": "assets/terapi/y/kaykay.webp"
+      },
+      {
+       "metin": "kovboy",
+       "gorsel": "assets/terapi/y/kovboy.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "mobilya",
+       "gorsel": "assets/terapi/y/mobilya.webp"
+      },
+      {
+       "metin": "dolunay",
+       "gorsel": "assets/terapi/y/dolunay.webp"
+      },
+      {
+       "metin": "battaniye",
+       "gorsel": "assets/terapi/y/battaniye.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "boy aynası",
+       "gorsel": "assets/terapi/y/boy_aynasi.webp"
+      },
+      {
+       "metin": "yüzücü mayosu",
+       "gorsel": "assets/terapi/y/yuzucu_mayosu.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "geyiğin boynuzu",
+       "gorsel": "assets/terapi/y/geyigin_boynuzu.webp"
+      },
+      {
+       "metin": "koyun yünü",
+       "gorsel": "assets/terapi/y/koyun_yunu.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "meyve suyu",
+       "gorsel": "assets/terapi/y/meyve_suyu.webp"
+      },
+      {
+       "metin": "siyah zeytin",
+       "gorsel": "assets/terapi/y/siyah_zeytin.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "İtfaiyeci yangını söndürüyor.",
+       "gorsel": "assets/terapi/y/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Yaman deney yapıyor.",
+       "gorsel": "assets/terapi/y/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Tiyatro oyunu oynadılar.",
+       "gorsel": "assets/terapi/y/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Yetenekli aşçı yemek yapıyor.",
+       "gorsel": "assets/terapi/y/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Yiğit aya ve yıldızlara bakıyor.",
+       "gorsel": "assets/terapi/y/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Ayı yazın uykudan uyanıyor.",
+       "gorsel": "assets/terapi/y/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/y/yonerge.webp"
+  },
+  {
+   "harf": "L",
+   "slug": "l",
+   "yonerge": "Ağzını aç. Dilinin ucunu yukarı kaldır ve üst dişlerinin arkasındaki tavana sıkıca yapıştır. Dilini oradan hiç ayırmadan şarkı söyler gibi seslen: Lllll!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "la",
+       "gorsel": null
+      },
+      {
+       "metin": "lı",
+       "gorsel": null
+      },
+      {
+       "metin": "lo",
+       "gorsel": null
+      },
+      {
+       "metin": "lu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "le",
+       "gorsel": null
+      },
+      {
+       "metin": "li",
+       "gorsel": null
+      },
+      {
+       "metin": "lö",
+       "gorsel": null
+      },
+      {
+       "metin": "lü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ala",
+       "gorsel": null
+      },
+      {
+       "metin": "ılı",
+       "gorsel": null
+      },
+      {
+       "metin": "olo",
+       "gorsel": null
+      },
+      {
+       "metin": "ulu",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ele",
+       "gorsel": null
+      },
+      {
+       "metin": "ili",
+       "gorsel": null
+      },
+      {
+       "metin": "ölö",
+       "gorsel": null
+      },
+      {
+       "metin": "ülü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "lif",
+       "gorsel": "assets/terapi/l/lif.webp"
+      },
+      {
+       "metin": "lor",
+       "gorsel": "assets/terapi/l/lor.webp"
+      },
+      {
+       "metin": "lens",
+       "gorsel": "assets/terapi/l/lens.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "lale",
+       "gorsel": "assets/terapi/l/lale.webp"
+      },
+      {
+       "metin": "lokum",
+       "gorsel": "assets/terapi/l/lokum.webp"
+      },
+      {
+       "metin": "lastik",
+       "gorsel": "assets/terapi/l/lastik.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "lahana",
+       "gorsel": "assets/terapi/l/lahana.webp"
+      },
+      {
+       "metin": "lolipop",
+       "gorsel": "assets/terapi/l/lolipop.webp"
+      },
+      {
+       "metin": "lavabo",
+       "gorsel": "assets/terapi/l/lavabo.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "kalem",
+       "gorsel": "assets/terapi/l/kalem.webp"
+      },
+      {
+       "metin": "balık",
+       "gorsel": "assets/terapi/l/balik.webp"
+      },
+      {
+       "metin": "balon",
+       "gorsel": "assets/terapi/l/balon.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "koltuk",
+       "gorsel": "assets/terapi/l/koltuk.webp"
+      },
+      {
+       "metin": "havlu",
+       "gorsel": "assets/terapi/l/havlu.webp"
+      },
+      {
+       "metin": "dolap",
+       "gorsel": "assets/terapi/l/dolap.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "helikopter",
+       "gorsel": "assets/terapi/l/helikopter.webp"
+      },
+      {
+       "metin": "bileklik",
+       "gorsel": "assets/terapi/l/bileklik.webp"
+      },
+      {
+       "metin": "salıncak",
+       "gorsel": "assets/terapi/l/salincak.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "gol",
+       "gorsel": "assets/terapi/l/gol.webp"
+      },
+      {
+       "metin": "fil",
+       "gorsel": "assets/terapi/l/fil.webp"
+      },
+      {
+       "metin": "çöl",
+       "gorsel": "assets/terapi/l/col.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "çatal",
+       "gorsel": "assets/terapi/l/catal.webp"
+      },
+      {
+       "metin": "davul",
+       "gorsel": "assets/terapi/l/davul.webp"
+      },
+      {
+       "metin": "okul",
+       "gorsel": "assets/terapi/l/okul.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "futbol",
+       "gorsel": "assets/terapi/l/futbol.webp"
+      },
+      {
+       "metin": "voleybol",
+       "gorsel": "assets/terapi/l/voleybol.webp"
+      },
+      {
+       "metin": "basketbol",
+       "gorsel": "assets/terapi/l/basketbol.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "aslan kral",
+       "gorsel": "assets/terapi/l/aslan_kral.webp"
+      },
+      {
+       "metin": "limonlu lolipop",
+       "gorsel": "assets/terapi/l/limonlu_lolipop.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "çikolata şelalesi",
+       "gorsel": "assets/terapi/l/cikolata_selalesi.webp"
+      },
+      {
+       "metin": "elmadaki tırtıl",
+       "gorsel": "assets/terapi/l/elmadaki_tirtil.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "kel oğlan",
+       "gorsel": "assets/terapi/l/kel_oglan.webp"
+      },
+      {
+       "metin": "balık kılçığı",
+       "gorsel": "assets/terapi/l/balik_kilcigi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Kaleci topları yakaladı.",
+       "gorsel": "assets/terapi/l/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Balarısı polen topluyor.",
+       "gorsel": "assets/terapi/l/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Palyaço balonları sallıyor.",
+       "gorsel": "assets/terapi/l/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Pilot uçakla bulutlarda dolaşıyor.",
+       "gorsel": "assets/terapi/l/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Pelikan gölde balık yakaladı.",
+       "gorsel": "assets/terapi/l/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Halıyı köpüklü suyla siliyor.",
+       "gorsel": "assets/terapi/l/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/l/yonerge.webp"
+  },
+  {
+   "harf": "R",
+   "slug": "r",
+   "yonerge": "Ağzını hafifçe aç. Dilinin ucunu yukarı kaldır (tavana doğru). Dilini sıkma, rahat bırak. Şimdi güçlü bir nefesle dilinin ucunu titret: Rrrrrr!",
+   "ekranlar": [
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ra",
+       "gorsel": null
+      },
+      {
+       "metin": "rı",
+       "gorsel": null
+      },
+      {
+       "metin": "ro",
+       "gorsel": null
+      },
+      {
+       "metin": "ru",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "re",
+       "gorsel": null
+      },
+      {
+       "metin": "ri",
+       "gorsel": null
+      },
+      {
+       "metin": "rö",
+       "gorsel": null
+      },
+      {
+       "metin": "rü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ara",
+       "gorsel": null
+      },
+      {
+       "metin": "ırı",
+       "gorsel": null
+      },
+      {
+       "metin": "oro",
+       "gorsel": null
+      },
+      {
+       "metin": "uru",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "heceler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "ere",
+       "gorsel": null
+      },
+      {
+       "metin": "iri",
+       "gorsel": null
+      },
+      {
+       "metin": "örö",
+       "gorsel": null
+      },
+      {
+       "metin": "ürü",
+       "gorsel": null
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "raf",
+       "gorsel": "assets/terapi/r/raf.webp"
+      },
+      {
+       "metin": "ruj",
+       "gorsel": "assets/terapi/r/ruj.webp"
+      },
+      {
+       "metin": "ray",
+       "gorsel": "assets/terapi/r/ray.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "römork",
+       "gorsel": "assets/terapi/r/romork.webp"
+      },
+      {
+       "metin": "roket",
+       "gorsel": "assets/terapi/r/roket.webp"
+      },
+      {
+       "metin": "rende",
+       "gorsel": "assets/terapi/r/rende.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "BAŞTA",
+     "ogeler": [
+      {
+       "metin": "rengarenk",
+       "gorsel": "assets/terapi/r/rengarenk.webp"
+      },
+      {
+       "metin": "reçete",
+       "gorsel": "assets/terapi/r/recete.webp"
+      },
+      {
+       "metin": "rekabet",
+       "gorsel": "assets/terapi/r/rekabet.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "zırh",
+       "gorsel": "assets/terapi/r/zirh.webp"
+      },
+      {
+       "metin": "sirk",
+       "gorsel": "assets/terapi/r/sirk.webp"
+      },
+      {
+       "metin": "tart",
+       "gorsel": "assets/terapi/r/tart.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "kürdan",
+       "gorsel": "assets/terapi/r/kurdan.webp"
+      },
+      {
+       "metin": "kirpi",
+       "gorsel": "assets/terapi/r/kirpi.webp"
+      },
+      {
+       "metin": "tırtıl",
+       "gorsel": "assets/terapi/r/tirtil.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "ORTADA",
+     "ogeler": [
+      {
+       "metin": "yumurta",
+       "gorsel": "assets/terapi/r/yumurta.webp"
+      },
+      {
+       "metin": "trambolin",
+       "gorsel": "assets/terapi/r/trambolin.webp"
+      },
+      {
+       "metin": "kertenkele",
+       "gorsel": "assets/terapi/r/kertenkele.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "nar",
+       "gorsel": "assets/terapi/r/nar.webp"
+      },
+      {
+       "metin": "tır",
+       "gorsel": "assets/terapi/r/tir.webp"
+      },
+      {
+       "metin": "küre",
+       "gorsel": "assets/terapi/r/kure.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "incir",
+       "gorsel": "assets/terapi/r/incir.webp"
+      },
+      {
+       "metin": "gitar",
+       "gorsel": "assets/terapi/r/gitar.webp"
+      },
+      {
+       "metin": "çadır",
+       "gorsel": "assets/terapi/r/cadir.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeler",
+     "konum": "SONDA",
+     "ogeler": [
+      {
+       "metin": "anahtar",
+       "gorsel": "assets/terapi/r/anahtar.webp"
+      },
+      {
+       "metin": "traktör",
+       "gorsel": "assets/terapi/r/traktor.webp"
+      },
+      {
+       "metin": "bilgisayar",
+       "gorsel": "assets/terapi/r/bilgisayar.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "kar küresi",
+       "gorsel": "assets/terapi/r/kar_kuresi.webp"
+      },
+      {
+       "metin": "tren garı",
+       "gorsel": "assets/terapi/r/tren_gari.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "erik reçeli",
+       "gorsel": "assets/terapi/r/erik_receli.webp"
+      },
+      {
+       "metin": "dinozor yumurtası",
+       "gorsel": "assets/terapi/r/dinozor_yumurtasi.webp"
+      }
+     ]
+    },
+    {
+     "asama": "kelimeGruplari",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "yarış arabası",
+       "gorsel": "assets/terapi/r/yaris_arabasi.webp"
+      },
+      {
+       "metin": "resim defteri",
+       "gorsel": "assets/terapi/r/resim_defteri.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Öğretmen ders anlatıyor.",
+       "gorsel": "assets/terapi/r/cumle1.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Sirkte gösteri yapıyorlar.",
+       "gorsel": "assets/terapi/r/cumle2.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Kurabiyeleri fırında pişiriyor.",
+       "gorsel": "assets/terapi/r/cumle3.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Türk bayrağı göklerde dalgalanıyor.",
+       "gorsel": "assets/terapi/r/cumle4.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Lunaparkta çarpışan arabalara biniyorlar.",
+       "gorsel": "assets/terapi/r/cumle5.webp"
+      }
+     ]
+    },
+    {
+     "asama": "cumleler",
+     "konum": null,
+     "ogeler": [
+      {
+       "metin": "Ramazan Bayramı’nda şeker topluyorlar.",
+       "gorsel": "assets/terapi/r/cumle6.webp"
+      }
+     ]
+    }
+   ],
+   "gorsel": "assets/terapi/r/yonerge.webp"
+  }
+ ],
+ "uyari": [],
+ "gorsel_sayisi": 764,
+ "gorsel_bayt": 19865274
+}

@@ -50,6 +50,26 @@ flutter:
     - assets/hayvanlar/
     - assets/icon/
     - assets/maskot/
+    - assets/terapi/b/
+    - assets/terapi/c/
+    - assets/terapi/ch/
+    - assets/terapi/d/
+    - assets/terapi/f/
+    - assets/terapi/g/
+    - assets/terapi/h/
+    - assets/terapi/j/
+    - assets/terapi/k/
+    - assets/terapi/l/
+    - assets/terapi/m/
+    - assets/terapi/n/
+    - assets/terapi/p/
+    - assets/terapi/r/
+    - assets/terapi/s/
+    - assets/terapi/sh/
+    - assets/terapi/t/
+    - assets/terapi/v/
+    - assets/terapi/y/
+    - assets/terapi/z/
 
 flutter_launcher_icons:
   android: true

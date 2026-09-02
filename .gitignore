@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# DİLART kaynak materyali (hocaların PDF'leri) ve taslak doküman — public repoya girmez
+drivelinkiiçindekiler/
+Mobil Uygulama Taslağı.docx
+tool/__pycache__/
